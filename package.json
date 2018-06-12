@@ -1,0 +1,68 @@
+{
+  "name": "jalla",
+  "version": "0.1.0",
+  "description": "web compiler and server in one",
+  "main": "index.js",
+  "bin": "bin.js",
+  "scripts": {
+    "test": "standard && dependency-check ./package.json && dependency-check ./package.json --unused"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jallajs/jalla.git"
+  },
+  "keywords": [
+    "compile",
+    "koa",
+    "postcss",
+    "browserify",
+    "documentify"
+  ],
+  "author": "code and conspire",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jallajs/jalla/issues"
+  },
+  "homepage": "https://github.com/jallajs/jalla#readme",
+  "devDependencies": {
+    "dependency-check": "^3.1.0",
+    "standard": "^11.0.0"
+  },
+  "dependencies": {
+    "autoprefixer": "^8.0.0",
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.7.0",
+    "babelify": "^8.0.0",
+    "brfs": "^1.6.1",
+    "browserify": "^16.2.2",
+    "browserslist": "^3.2.8",
+    "chalk": "^2.4.1",
+    "concat-stream": "^1.6.2",
+    "dedent": "^0.7.0",
+    "documentify": "^3.2.2",
+    "envify": "^4.1.0",
+    "exorcist": "^1.0.1",
+    "get-port": "^3.2.0",
+    "hstream": "^1.2.0",
+    "koa": "^2.5.1",
+    "koa-conditional-get": "^2.0.0",
+    "koa-etag": "^3.0.0",
+    "koa-route": "^3.2.0",
+    "koa-static": "^4.0.3",
+    "minimist": "^1.2.0",
+    "nanohtml": "^1.2.4",
+    "postcss": "^6.0.22",
+    "postcss-clean": "^1.1.0",
+    "postcss-import": "^11.1.0",
+    "postcss-load-config": "^1.2.0",
+    "postcss-url": "^7.3.2",
+    "postcss-watcher": "^1.0.5",
+    "posthtml-minifier": "^0.1.0",
+    "posthtmlify": "^0.1.0",
+    "read-pkg-up": "^3.0.0",
+    "resolve": "^1.7.1",
+    "source-map-support": "^0.5.6",
+    "tinyify": "^2.4.3",
+    "watchify-middleware": "^1.8.0"
+  }
+}
