@@ -22,20 +22,25 @@ function start (entry, opts = {}) {
   var app = new App()
   app.entry = entry
   app.silent = true
+  app.context.script = {branches: {}}
+  app.context.style = {branhces: {}}
 
   if (!opts.quiet) ui(app)
 
-  app.on('bundle:script', function (file, buf) {
-    if (file !== entry) return
-    app.context.script = {
-      buffer: buf,
-      hash: crypto.createHash('sha512').update(buf).digest('buffer')
+  app.on('bundle:script', function (file, buff) {
+    if (file === entry) {
+      app.context.script.buffer = buff
+      app.context.script.hash = crypto.createHash('sha512').update(buff).digest('buffer')
+    } else {
+      let branch = app.context.script.branches[file] = {}
+      branch.buffer = buff
+      branch.hash = crypto.createHash('sha512').update(buff).digest('buffer')
     }
   })
-  app.on('bundle:style', function (file, buf) {
+  app.on('bundle:style', function (file, buff) {
     app.context.style = {
-      buffer: buf,
-      hash: crypto.createHash('sha512').update(buf).digest('buffer')
+      buffer: buff,
+      hash: crypto.createHash('sha512').update(buff).digest('buffer')
     }
   })
 
@@ -53,8 +58,8 @@ function start (entry, opts = {}) {
   }
 
   if (sw) app.use(get(/^\/(sw|service-worker)\.js(\.map)?$/, script(sw, app)))
-  app.use(get(/^\/(\w+\/)?bundle\.js(\.map)?$/, script(entry, app)))
-  app.use(get(/^\/(\w+\/)?bundle\.css(\.map)?$/, style(css, app)))
+  app.use(get(/^\/(?:\w+\/)?bundle(-\w+)?\.js(\.map)?$/, script(entry, app)))
+  app.use(get(/^\/(?:\w+\/)?bundle\.css(\.map)?$/, style(css, app)))
 
   if (app.env === 'development') app.use(serve(dir, {maxage: 0}))
   app.use(serve(path.resolve(dir, 'assets'), {maxage: 1000 * 60 * 60 * 24 * 365}))

@@ -51,10 +51,10 @@ When a non-critical error was encountered, e.g. a postcss plugin failed to parse
 #### `app.on('progress', callback(file))`
 When a change is detected to an entry file and processing begins.
 
-#### `app.on('bundle:script', callback(file, buf))`
+#### `app.on('bundle:script', callback(file, buff)`
 When a script file finishes bundling.
 
-#### `app.on('bundle:style', callback(file, buf))`
+#### `app.on('bundle:style', callback(file, buff)`
 When a css file finishes bundling.
 
 #### `app.on('bundle:file', callback(file))`
