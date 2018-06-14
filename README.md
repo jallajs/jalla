@@ -67,6 +67,7 @@ When a HTTP response has been sent.
 When the server starts.
 
 ## Todo
+- [ ] Add bundle splitting for CSS
 - [ ] Document configuration and options
 - [ ] Document middleware
 - [ ] Document SSR
