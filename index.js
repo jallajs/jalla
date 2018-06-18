@@ -66,7 +66,7 @@ function start (entry, opts = {}) {
   app.use(serve(path.resolve(dir, 'assets'), {maxage: 1000 * 60 * 60 * 24 * 365}))
   app.use(get('/manifest.json', manifest(app)))
 
-  app.use(render(entry))
+  app.use(render(entry, app))
 
   return app
 }
