@@ -22,6 +22,7 @@ function start (entry, opts = {}) {
   var app = new App()
   app.entry = entry
   app.silent = true
+  app.base = opts.base || ''
   app.context.script = {branches: {}}
   app.context.style = {branhces: {}}
 

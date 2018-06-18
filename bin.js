@@ -16,6 +16,7 @@ var argv = minimist(process.argv.slice(2), {
     'version': 'v',
     'quiet': 'q',
     'debug': 'd',
+    'base': 'b',
     'port': 'p',
     'help': 'h'
   },
@@ -40,6 +41,7 @@ if (argv.help) {
       --version, -v           print version
       --quiet, -q             disable printing to console
       --debug, -d             enable node inspector, accepts port
+      --base, -b              base path where app will be mounted
       --port, -p              server port
       --help, -h              show this help text
 
