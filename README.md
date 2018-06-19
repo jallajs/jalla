@@ -5,9 +5,9 @@
 [![downloads][downloads-badge]][npm-link]
 [![js-standard-style][standard-badge]][standard-link]
 
-Jalla is an *opinionated* web compiler and server in one, intended for both development and production use. Jalla puts together popular tools and frameworks that makes web development fun and performant.
+Jalla is an *opinionated* web compiler and server in one, intended for both development and production use. Jalla puts together popular tools and frameworks that make web development fun and performant.
 
-The stack consists of a [Koa][koa] server, a [Browserify][browserify] bundler for scripts and [PostCSS][postcss] for styles. Documents are compiled using [documentify][documentify]. It's intended for use with [Choo][choo] and **heavily** inspired by [Bankai][bankai]. In fact, if static bundling and CSS in JS is your thing, you'll probably have a better time using Bankai.
+The stack consists of a [Koa][koa] server, a [Browserify][browserify] bundler for scripts and [PostCSS][postcss] for styles. Documents are compiled using [Documentify][documentify]. It's intended for use with [Choo][choo] and **heavily** inspired by [Bankai][bankai]. In fact, if static bundling and CSS in JS is your thing, you'll probably have a better time using Bankai.
 
 ## Usage
 ```bash
@@ -43,7 +43,7 @@ app.listen(8080)
 Most of the internal workings are exposed as events on the application (Koa) instance.
 
 #### `app.on('error', callback(err))`
-When an internal error occurs or a route could not be served. If an HTTP error was encountered, the status code is availible on the error object.
+When an internal error occurs or a route could not be served. If an HTTP error was encountered, the status code is available on the error object.
 
 #### `app.on('warning', callback(warning))`
 When a non-critical error was encountered, e.g. a postcss plugin failed to parse a rule.
