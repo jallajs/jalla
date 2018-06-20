@@ -58,7 +58,7 @@ function start (entry, opts = {}) {
     app.use(require('./lib/queue')(app))
   }
 
-  if (sw) app.use(get(/^\/(sw|service-worker)\.js(\.map)?$/, script(sw, app)))
+  if (sw) app.use(get(/^\/(?:sw|service-worker)\.js(\.map)?$/, script(sw, app)))
   app.use(get(/^\/(?:\w+\/)?bundle([-\w]+)?\.js(\.map)?$/, script(entry, app)))
   app.use(get(/^\/(?:\w+\/)?bundle\.css(\.map)?$/, style(css, app)))
 
