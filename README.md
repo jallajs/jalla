@@ -18,23 +18,19 @@ $ jalla index.js
 Middleware can be added by creating an instance of the server. The application is an instance of [Koa][koa] and supports all [Koa middleware][koa-middleware].
 
 ```javascript
+var mount = require('koa-mount')
 var jalla = require('jalla')
 var app = jalla('index.js')
 
-// enable gzip
-app.use(require('koa-compress')())
-
-app.use(function (ctx, next) {
-  // only allow robots on production website
-  if (ctx.path === '/robots.txt' && process.env.NODE_ENV !== 'production') {
-    ctx.type = 'text/plain'
-    ctx.body = `
-      User-agent: *
-      Disallow: /
-    `
-  }
-  return next()
-})
+// deny robots access unless in production
+app.use(mount('/robots.txt', function (ctx, next) {
+  if (process.env.NODE_ENV === 'production') return next()
+  ctx.type = 'text/plain'
+  ctx.body = `
+    User-agent: *
+    Disallow: /
+  `
+}))
 
 app.listen(8080)
 ```
