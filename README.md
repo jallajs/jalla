@@ -44,13 +44,13 @@ When an internal error occurs or a route could not be served. If an HTTP error w
 #### `app.on('warning', callback(warning))`
 When a non-critical error was encountered, e.g. a postcss plugin failed to parse a rule.
 
-#### `app.on('progress', callback(file))`
+#### `app.on('progress', callback(file, uri))`
 When a change is detected to an entry file and processing begins.
 
-#### `app.on('bundle:script', callback(file, buff)`
+#### `app.on('bundle:script', callback(file, uri, buff)`
 When a script file finishes bundling.
 
-#### `app.on('bundle:style', callback(file, buff)`
+#### `app.on('bundle:style', callback(file, uri, buff)`
 When a css file finishes bundling.
 
 #### `app.on('bundle:file', callback(file))`
