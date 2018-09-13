@@ -80,6 +80,6 @@ if (argv['service-worker']) opts.sw = argv['service-worker']
 
 var app = stack(path.resolve(process.cwd(), entry), opts)
 
-getPort({port: argv.port}).then(function (port) {
+getPort({ port: argv.port }).then(function (port) {
   app.listen(port)
 })

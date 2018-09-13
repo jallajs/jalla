@@ -1,7 +1,7 @@
 var path = require('path')
 var assert = require('assert')
 var crypto = require('crypto')
-var {get} = require('koa-route')
+var { get } = require('koa-route')
 var serve = require('koa-static')
 var ui = require('./lib/ui')
 var App = require('./lib/app')
@@ -50,8 +50,9 @@ function start (entry, opts = {}) {
   app.use(style(css, 'bundle', app))
   app.use(script(entry, 'bundle', app))
 
-  if (app.env === 'development') app.use(serve(dir, {maxage: 0}))
-  app.use(serve(path.resolve(dir, 'assets'), {maxage: 1000 * 60 * 60 * 24 * 365}))
+  var maxage = (app.env === 'development') ? 0 : 1000 * 60 * 60 * 24 * 365
+  if (app.env === 'development') app.use(serve(dir, { maxage: 0 }))
+  app.use(serve(path.resolve(dir, 'assets'), { maxage }))
   app.use(get('/manifest.json', manifest(app)))
 
   app.use(render(entry, app))
