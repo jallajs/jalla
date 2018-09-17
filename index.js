@@ -42,7 +42,7 @@ function start (entry, opts = {}) {
   app.use(require('koa-conditional-get')())
   app.use(require('koa-etag')())
 
-  if (process.env.NODE_ENV !== 'development') {
+  if (app.env !== 'development') {
     app.use(defer(app, (ctx, next) => next()))
   }
 
