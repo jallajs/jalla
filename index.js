@@ -67,8 +67,11 @@ function start (entry, opts = {}) {
   // add bundle output to context asset directory
   function onbundle (file, uri, buff) {
     var hash = crypto.createHash('sha512').update(buff).digest('buffer')
-    var path = app.env === 'development' ? 'dev' : hash.toString('hex').slice(0, 16)
-    app.context.assets[uri].url = `${app.base}/${path}/${uri}`
+    var dir = app.base
+    if (file !== sw) {
+      dir += (app.env === 'development' ? '/dev' : `/${hash.toString('hex').slice(0, 16)}`)
+    }
+    app.context.assets[uri].url = dir + `/${uri}`
     app.context.assets[uri].hash = hash
     app.context.assets[uri].buffer = buff
   }
