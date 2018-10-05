@@ -51,6 +51,7 @@
     "koa-static": "^4.0.3",
     "minimist": "^1.2.0",
     "nanohtml": "^1.2.4",
+    "ora": "^3.0.0",
     "postcss": "^6.0.22",
     "postcss-csso": "^3.0.0",
     "postcss-import": "^11.1.0",
