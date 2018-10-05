@@ -1,6 +1,6 @@
 {
   "name": "jalla",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "web compiler and server in one",
   "main": "index.js",
   "bin": "bin.js",
