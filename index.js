@@ -12,6 +12,11 @@ var render = require('./lib/render')
 var manifest = require('./lib/manifest')
 var serviceWorker = require('./lib/service-worker')
 
+require('@babel/register')({
+  extensions: ['.js'],
+  plugins: ['dynamic-import-split-require']
+})
+
 module.exports = start
 
 function start (entry, opts = {}) {
@@ -71,9 +76,11 @@ function start (entry, opts = {}) {
     if (file !== sw) {
       dir += (app.env === 'development' ? '/dev' : `/${hash.toString('hex').slice(0, 16)}`)
     }
-    app.context.assets[uri].url = dir + `/${uri}`
-    app.context.assets[uri].hash = hash
-    app.context.assets[uri].buffer = buff
+    var asset = app.context.assets[uri]
+    if (!asset) asset = app.context.assets[uri] = { file: file }
+    asset.url = dir + `/${uri}`
+    asset.hash = hash
+    asset.buffer = buff
   }
 }
 
