@@ -12,16 +12,19 @@ var render = require('./lib/render')
 var manifest = require('./lib/manifest')
 var serviceWorker = require('./lib/service-worker')
 
-require('@babel/register')({
-  extensions: ['.js'],
-  plugins: ['dynamic-import-split-require']
-})
-
 module.exports = start
 
 function start (entry, opts = {}) {
   assert(typeof entry === 'string', 'jalla: entry should be type string')
   entry = absolute(entry)
+
+  // schedule babel register after any other immediately required modules
+  setImmediate(function () {
+    require('@babel/register')({
+      extensions: ['.js'],
+      plugins: ['dynamic-import-split-require']
+    })
+  })
 
   var dir = path.dirname(entry)
   var sw = opts.sw && absolute(opts.sw, dir)
