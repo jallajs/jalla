@@ -53,9 +53,9 @@ function start (entry, opts = {}) {
   var maxage = (app.env === 'development') ? 0 : 1000 * 60 * 60 * 24 * 365
   if (app.env === 'development') app.use(serve(dir, { maxage: 0 }))
   app.use(serve(path.resolve(dir, 'assets'), { maxage }))
-  app.use(get('/manifest.json', manifest(app)))
 
   app.use(render(entry, app))
+  app.use(get('/manifest.json', manifest(app)))
 
   return app
 
