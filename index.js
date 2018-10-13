@@ -1,8 +1,8 @@
 var path = require('path')
 var assert = require('assert')
 var crypto = require('crypto')
-var { get } = require('koa-route')
 var serve = require('koa-static')
+var { get } = require('koa-route')
 var ui = require('./lib/ui')
 var App = require('./lib/app')
 var defer = require('./lib/defer')
@@ -20,9 +20,9 @@ function start (entry, opts = {}) {
 
   // schedule babel register after any other immediately required modules
   setImmediate(function () {
-    require('@babel/register')({
+    require('babel-register')({
       extensions: ['.js'],
-      plugins: ['dynamic-import-split-require']
+      plugins: [require('babel-plugin-dynamic-import-split-require')]
     })
   })
 
