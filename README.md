@@ -46,8 +46,17 @@ app.listen(8080)
 ```
 
 ### `ctx.assets`
-Compiled assets (js, css) are exposed on the koa `ctx` object as a dictionary
-with their `file`, `map`, `buffer` and `url` as property keys.
+Compiled assets (js, css) are exposed on the koa `ctx` object as an object with
+the properties `file`, `map`, `buffer` and `url`.
+
+### Options
+Options can be supplied as the second argument (`jalla('index.js', opts)`).
+
+- __base__ (*default: '/'*): pathname under which to serve application assets.
+- __quiet__ (*default: false*): prevent logging through the console.
+- __compile__ (*default: true*): wether to compile the application files using
+babel during SSR. Used to transform dynamic imports (`import()`) to
+[split-require][split-require]. Will also respect `.bavelrc` config files.
 
 ### Events
 Most of the internal workings are exposed as events on the application (Koa)
@@ -61,8 +70,11 @@ was encountered, the status code is available on the error object.
 When a non-critical error was encountered, e.g. a postcss plugin failed to parse
 a rule.
 
+#### `app.on('update', callback(file))`
+When a file has been changed.
+
 #### `app.on('progress', callback(file, uri))`
-When a change is detected to an entry file and processing begins.
+When an entry file is being bundled.
 
 #### `app.on('bundle:script', callback(file, uri, buff)`
 When a script file finishes bundling.

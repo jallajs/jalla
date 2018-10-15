@@ -9,6 +9,7 @@ var defer = require('./lib/defer')
 var style = require('./lib/style')
 var script = require('./lib/script')
 var render = require('./lib/render')
+var compile = require('./lib/compile')
 var manifest = require('./lib/manifest')
 var serviceWorker = require('./lib/service-worker')
 
@@ -17,14 +18,6 @@ module.exports = start
 function start (entry, opts = {}) {
   assert(typeof entry === 'string', 'jalla: entry should be type string')
   entry = absolute(entry)
-
-  // schedule babel register after any other immediately required modules
-  setImmediate(function () {
-    require('babel-register')({
-      extensions: ['.js'],
-      plugins: [require('babel-plugin-dynamic-import-split-require')]
-    })
-  })
 
   var dir = path.dirname(entry)
   var sw = opts.sw && absolute(opts.sw, dir)
@@ -36,6 +29,7 @@ function start (entry, opts = {}) {
   app.context.assets = {}
 
   if (!opts.quiet) ui(app)
+  if (opts.compile === undefined || opts.compile) compile(entry, app)
 
   app.on('progress', onprogress)
   app.on('bundle:script', onbundle)
