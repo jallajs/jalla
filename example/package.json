@@ -6,11 +6,16 @@
   "scripts": {
     "start": "../bin.js index.js"
   },
+  "standard": {
+    "parser": "babel-eslint"
+  },
   "author": "code and conspire",
   "license": "MIT",
   "dependencies": {
-    "choo": "^6.11.0",
-    "choo-lazy-view": "^0.1.0",
-    "split-require": "^3.1.1"
+    "choo": "^6.13.0",
+    "choo-lazy-view": "^0.2.0"
+  },
+  "devDependencies": {
+    "babel-eslint": "^10.0.1"
   }
 }
