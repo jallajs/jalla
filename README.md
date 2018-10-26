@@ -89,7 +89,7 @@ When a file is being included in a bundle.
 When a HTTP response has been sent.
 
 #### `app.on('start', callback(port))`
-When the server starts.
+When the server has started and in listening.
 
 ## Todo
 - [ ] Add bundle splitting for CSS
