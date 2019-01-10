@@ -5,36 +5,36 @@
 [![downloads][downloads-badge]][npm-link]
 [![js-standard-style][standard-badge]][standard-link]
 
-Jalla is an *opinionated* web compiler and server in one, intended for both
-development and production use. Jalla puts together popular tools and frameworks
-that make web development fast, fun and performant.
+Jalla is an *opinionated* compiler and server in one. It makes web development 
+fast, fun and exceptionally performant.
 
-Jalla is an excellent choice when static files doesn't cut it. Maybe you need to
-dynamically render your views on the server, you might need to HTTP/2 push
-assets for certain pages or integrate with other back end services.
+Jalla is an excellent choice **when static files just don't cut it**. Perhaps 
+you need to render views dynamically, push (HTTP/2) assets or integrate with 
+back end services. We get the same performance level with a heavy cache work 
+described below..
 
-The stack consists of a [Koa][koa] server, a [Browserify][browserify] bundler
-for scripts and [PostCSS][postcss] for styles. Documents are compiled using
-[Documentify][documentify]. Jalla is built with [Choo][choo] in mind and is
-**heavily** inspired by [Bankai][bankai].
+In short: a [Koa][koa] server, a [Browserify][browserify] bundler
+for scripts and a [PostCSS][postcss] setup for styles. Documents are compiled 
+using [Documentify][documentify]. Jalla is built with [Choo][choo] in mind and 
+is heavily inspired by [Bankai][bankai].
 
 ## Usage
 ```bash
 $ jalla index.js
 ```
 
-### Environment
-If the environment variable `NODE_ENV` is not set, jalla assumes you are in
+### Development vs. Production
+If the environment variable `NODE_ENV` is missing, jalla assumes you are in
 development and will default to *watch-mode* which observes files for changes
 and recompiles them on the fly. Setting `NODE_ENV` to anything but `development`
-will cause jalla to perform more expensive compilation and optimzations on your
-code and will not watch for file changes.
+will cause jalla to perform more expensive compilation and optimizations on your
+code and will stop watching for file changes.
 ```bash
 $ NODE_ENV=production jalla index.js
 ```
 
 ### JavaScript
-JavaScript is compiled using [Browserify][browserify]. Custom transforms can be
+Scripts are compiled using [Browserify][browserify]. Custom transforms can be
 added using the [`browserify.transform`][browserify-transform] field in your
 `package.json` file.
 
@@ -52,7 +52,8 @@ added using the [`browserify.transform`][browserify-transform] field in your
 
 </details>
 
-#### The following Browserify optimizations are included
+<details>
+<summary>Included Browserify optimizations</summary>
 
 ##### [split-require][split-require]
 Lazily load parts of your codebase. Jalla will transform dynamic imports into
@@ -86,10 +87,12 @@ performance. *Not used in watch-mode*.
 A while suite of optimizations and minifications removing unused code,
 significantly reducing file size. *Not used in watch-mode*.
 
+</details>
+
 ### CSS
-CSS files are looked up and included by default. Whenever a JavaScript module is
-used in your application, jalla will lookup the location of the file and try and
-find an adjacent `index.css`. Jalla will respect the `style` field in a modules
+CSS files are located and included automaticly. Whenever a JavaScript module is
+used in your application, jalla will try and find an adjacent `index.css` file 
+in the same location. Jalla will also respect the `style` field in a modules
 `package.json` to determine which CSS file to include.
 
 All CSS files are transpiled using [PostCSS][PostCSS]. To add PostCSS plugins,
@@ -124,11 +127,12 @@ function config (ctx) {
 
 </details>
 
-#### The following PostCSS plugins are included
+<details>
+<summary>The included PostCSS plugins</summary>
 
 ##### [postcss-url][postcss-url]
-Rewrite urls and copy assets from their source location. This means you can
-reference e.g. background images and the like using relative urls and it'll just
+Rewrite URLs and copy assets from their source location. This means you can
+reference e.g. background images and the like using relative URLs and it'll just
 work™.
 
 ##### [postcss-import][postcss-import]
@@ -139,10 +143,13 @@ files in `node_modules`, just like it does in Node.js.
 Automatically add vendor prefixes. Respects [`.browserlist`][browserslist] to
 determine which browsers to support. *Not used in watch-mode*.
 
+</details>
+
 ### HTML
 Jalla uses [Documentify][documentify] to compile server-rendered markup.
-Documentify can be configured in the `package.json`. By default, jalla only
-applies HTML minification using [posthtml-minifier][posthtml-minifier].
+Documentify can be configured in the `package.json` (see Documentify 
+documentation). By default, jalla only applies HTML minification using 
+[posthtml-minifier][posthtml-minifier].
 
 <details>
 <summary>Example Documentify config</summary>
@@ -196,7 +203,7 @@ function document () {
 </details>
 
 ### Assets
-All files located in the root folder `./assets` are served by the application
+All files located in the root folder `./assets` are automatically being served
 under the webpage root.
 
 ### Options
@@ -227,7 +234,7 @@ $ jalla index.js --sw sw.js
 
 Information on the main bundle is exposed to the service worker during its build
 and can be accessed as environment variables.
-- __`process.env.ASSET_LIST`__ a list of urls to all included assets
+- __`process.env.ASSET_LIST`__ a list of URLs to all included assets
 
 
 <details>
@@ -399,7 +406,7 @@ ontop of your server for optimal performance.
 Cloudflares free teir is an excellent complement to jalla for caching HTML
 responses. You'll need to setup Cloudflare to
 [cache everything][cloudflare-cache-guide] and to respect exiting cache headers.
-This means you'll be able to tell cloudflare which responses to cache and for
+This means you'll be able to tell Cloudflare which responses to cache and for
 how long by setting the `s-maxage` header.
 
 However, when publishing a new version of your webpage or when the cache should
@@ -531,10 +538,6 @@ When the server has started and in listening.
 ## Todo
 - [ ] Fix CSS asset handling
 - [ ] Add bundle splitting for CSS
-- [x] Document configuration and options
-- [x] Document middleware
-- [x] Document SSR
-- [x] Document meta tags
 - [ ] Export compiled files to disc
 
 [choo]: https://github.com/choojs/choo
