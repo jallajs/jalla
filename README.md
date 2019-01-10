@@ -11,7 +11,7 @@ that make web development fast, fun and performant.
 
 Jalla is an excellent choice when static files doesn't cut it. Maybe you need to
 dynamically render your views on the server, you might need to HTTP/2 push
-assets for certain or integrate with other back end services.
+assets for certain pages or integrate with other back end services.
 
 The stack consists of a [Koa][koa] server, a [Browserify][browserify] bundler
 for scripts and [PostCSS][postcss] for styles. Documents are compiled using
@@ -39,7 +39,7 @@ added using the [`browserify.transform`][browserify-transform] field in your
 `package.json` file.
 
 <details>
-<summary>Example</summary>
+<summary>Example browserify config</summary>
 
 ```javascript
 // package.json
@@ -52,16 +52,16 @@ added using the [`browserify.transform`][browserify-transform] field in your
 
 </details>
 
-By default, the following optimizations are included:
+#### The following Browserify optimizations are included
 
-#### [split-require][split-require]
+##### [split-require][split-require]
 Lazily load parts of your codebase. Jalla will transform dynamic imports into
 calls to split-require automatically (using a
 [babel plugin][babel-dynamic-import]), meaning you only have to call
 `import('./some-file')` to get bundle splitting right out of the box without any
 tooling footprint in your source code.
 
-#### [babelify][babelify]
+##### [babelify][babelify]
 Run [babel][babel] on your sourcecode. Will respect local `.babelrc` files for
 configuring the babel transform.
 
@@ -72,24 +72,24 @@ transform dynamic import calls to split-require.
 file to configure which babel plugins to support the browsers listed therein.
 *Not used in watch-mode*.
 
-#### [brfs][brfs]
+##### [brfs][brfs]
 Inline static assets in your application using the Node.js `fs` module.
 
-#### [envify][envify]
+##### [envify][envify]
 Use environment variables in your code.
 
-#### [nanohtml][nanohtml]
+##### [nanohtml][nanohtml]
 Choo-specific optimization which transpiles html templates for increased browser
 performance. *Not used in watch-mode*.
 
-#### [tinyify][tinyify]
+##### [tinyify][tinyify]
 A while suite of optimizations and minifications removing unused code,
 significantly reducing file size. *Not used in watch-mode*.
 
 ### CSS
 CSS files are looked up and included by default. Whenever a JavaScript module is
 used in your application, jalla will lookup the location of the file and try and
-find an adjacent `index.css`. Jalla will respect the `style` field in a module's
+find an adjacent `index.css`. Jalla will respect the `style` field in a modules
 `package.json` to determine which CSS file to include.
 
 All CSS files are transpiled using [PostCSS][PostCSS]. To add PostCSS plugins,
@@ -98,7 +98,7 @@ conditionally configure PostCSS, create a `.postcssrc.js` in the root of your
 project. See [postcss-load-config][postcss-load-config] for details.
 
 <details>
-<summary>Example</summary>
+<summary>Example PostCSS config</summary>
 
 ```javascript
 // package.json
@@ -124,27 +124,28 @@ function config (ctx) {
 
 </details>
 
-By default, the following plugins are included:
+#### The following PostCSS plugins are included
 
-#### [postcss-url][postcss-url]
-Rewrite urls and copy assets. This means you can reference e.g. background
-images and the like using relative urls and it'll just work™.
+##### [postcss-url][postcss-url]
+Rewrite urls and copy assets from their source location. This means you can
+reference e.g. background images and the like using relative urls and it'll just
+work™.
 
-#### [postcss-import][postcss-import]
+##### [postcss-import][postcss-import]
 Inline files imported with `@import`. Works for both local files as well as for
 files in `node_modules`, just like it does in Node.js.
 
-#### [autoprefixer][autoprefixer]
+##### [autoprefixer][autoprefixer]
 Automatically add vendor prefixes. Respects [`.browserlist`][browserslist] to
 determine which browsers to support. *Not used in watch-mode*.
 
 ### HTML
 Jalla uses [Documentify][documentify] to compile server-rendered markup.
-Documentify can be configured in the `package.json`. By default it only applies
-minification using [posthtml-minifier][posthtml-minifier].
+Documentify can be configured in the `package.json`. By default, jalla only
+applies HTML minification using [posthtml-minifier][posthtml-minifier].
 
 <details>
-<summary>Example</summary>
+<summary>Example Documentify config</summary>
 
 ```javascript
 // package.json
@@ -179,7 +180,7 @@ function document () {
     head: {
       // add some tracking script to the header
       _appendHtml: `
-        <script async src="https://www.evil-corp.com/tracker.js?id=abc123"></script>
+        <script async src="https://www.tracking-service.com/tracker.js?id=abc123"></script>
         <script>
           window.dataLayer = window.dataLayer || [];
           function track () { dataLayer.push(arguments); }
@@ -230,7 +231,7 @@ and can be accessed as environment variables.
 
 
 <details>
-<summary>Example</summary>
+<summary>Example service worker</summary>
 
 ```javascript
 // index.json
@@ -341,7 +342,7 @@ you to push promises into. Once all promises are resolved, the second render
 will commence.
 
 <details>
-<summary>Example</summary>
+<summary>Example using state.prefetch</summary>
 
 ```javascript
 var fetch = require('node-fetch')
@@ -388,12 +389,13 @@ function store (state, emitter) {
 
 </details>
 
+#### Caching HTML
 Jalla will render HTML for every request, which is excellent for dynamic content
 but might not be what you need for all your views and endpoints. You will
 probably want to add custom caching middleware or an external caching layer
 ontop of your server for optimal performance.
 
-#### Setting up caching on Cloudflare with jalla
+##### Setting up caching on Cloudflare with jalla
 Cloudflares free teir is an excellent complement to jalla for caching HTML
 responses. You'll need to setup Cloudflare to
 [cache everything][cloudflare-cache-guide] and to respect exiting cache headers.
@@ -405,7 +407,7 @@ be invalidated due to some external service update, you'll need to purge the
 Cloudflare cache. For that purpose, there's [cccpurge][cccpurge].
 
 <details>
-<summary>Example</summary>
+<summary>Example purging cache on server startup</summary>
 
 ```javascript
 var purge = require('cccpurge')
@@ -449,7 +451,7 @@ Meta data for the page being rendered can be added to `ctx.state.meta`. A
 `<meta>` tag will be added to the header for every property therein.
 
 <details>
-<summary>Example</summary>
+<summary>Example decorating ctx.state</summary>
 
 ```javascript
 var geoip = require('geoip-lite')
@@ -473,7 +475,7 @@ Compiled assets (js, css) are exposed on the koa `ctx` object as an object with
 the properties `file`, `map`, `buffer` and `url`.
 
 <details>
-<summary>Example</summary>
+<summary>Example adding Link headers for all JS assets</summary>
 
 ```javascript
 app.use(function (ctx, next) {
@@ -534,8 +536,6 @@ When the server has started and in listening.
 - [x] Document SSR
 - [x] Document meta tags
 - [ ] Export compiled files to disc
-- [-] Export compiled HTML to disc
-- [-] Resolve dynamic routes on export
 
 [choo]: https://github.com/choojs/choo
 [bankai]: https://github.com/choojs/bankai
