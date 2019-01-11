@@ -1,14 +1,15 @@
 var path = require('path')
 var assert = require('assert')
 var crypto = require('crypto')
-var { get } = require('koa-route')
 var serve = require('koa-static')
+var { get } = require('koa-route')
 var ui = require('./lib/ui')
 var App = require('./lib/app')
 var defer = require('./lib/defer')
 var style = require('./lib/style')
 var script = require('./lib/script')
 var render = require('./lib/render')
+var compile = require('./lib/compile')
 var manifest = require('./lib/manifest')
 var serviceWorker = require('./lib/service-worker')
 
@@ -28,6 +29,7 @@ function start (entry, opts = {}) {
   app.context.assets = {}
 
   if (!opts.quiet) ui(app)
+  if (opts.compile === undefined || opts.compile) compile(entry, app)
 
   app.on('progress', onprogress)
   app.on('bundle:script', onbundle)
@@ -71,9 +73,11 @@ function start (entry, opts = {}) {
     if (file !== sw) {
       dir += (app.env === 'development' ? '/dev' : `/${hash.toString('hex').slice(0, 16)}`)
     }
-    app.context.assets[uri].url = dir + `/${uri}`
-    app.context.assets[uri].hash = hash
-    app.context.assets[uri].buffer = buff
+    var asset = app.context.assets[uri]
+    if (!asset) asset = app.context.assets[uri] = { file: file }
+    asset.url = dir + `/${uri}`
+    asset.hash = hash
+    asset.buffer = buff
   }
 }
 

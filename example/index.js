@@ -1,4 +1,3 @@
-var splitRequire = require('split-require')
 var LazyView = require('choo-lazy-view')
 var html = require('choo/html')
 var choo = require('choo')
@@ -6,8 +5,8 @@ var choo = require('choo')
 var app = choo()
 
 app.route('/', main)
-app.route('/a', LazyView.create((callback) => splitRequire('./a', callback)))
-app.route('/b', LazyView.create((callback) => splitRequire('./b', callback)))
+app.route('/a', LazyView.create(() => import('./a')))
+app.route('/b', LazyView.create(() => import('./b')))
 
 module.exports = LazyView.mount(app, 'body')
 
