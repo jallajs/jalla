@@ -1,15 +1,12 @@
 var path = require('path')
 var assert = require('assert')
-var crypto = require('crypto')
 var serve = require('koa-static')
 var { get } = require('koa-route')
-var ui = require('./lib/ui')
 var App = require('./lib/app')
 var defer = require('./lib/defer')
 var style = require('./lib/style')
 var script = require('./lib/script')
 var render = require('./lib/render')
-var compile = require('./lib/compile')
 var manifest = require('./lib/manifest')
 var serviceWorker = require('./lib/service-worker')
 
@@ -22,18 +19,7 @@ function start (entry, opts = {}) {
   var dir = path.dirname(entry)
   var sw = opts.sw && absolute(opts.sw, dir)
   var css = opts.css && absolute(opts.css, dir)
-  var app = new App()
-  app.entry = entry
-  app.silent = true
-  app.base = opts.base || ''
-  app.context.assets = {}
-
-  if (!opts.quiet) ui(app)
-  if (opts.compile === undefined || opts.compile) compile(entry, app)
-
-  app.on('progress', onprogress)
-  app.on('bundle:script', onbundle)
-  app.on('bundle:style', onbundle)
+  var app = new App(entry, Object.assign({}, opts, { sw, css }))
 
   app.use(async function (ctx, next) {
     var start = Date.now()
@@ -60,25 +46,6 @@ function start (entry, opts = {}) {
   app.use(get('/manifest.json', manifest(app)))
 
   return app
-
-  // add to context asset directory
-  function onprogress (file, uri, progress) {
-    app.context.assets[uri] = { file: file }
-  }
-
-  // add bundle output to context asset directory
-  function onbundle (file, uri, buff) {
-    var hash = crypto.createHash('sha512').update(buff).digest('buffer')
-    var dir = app.base
-    if (file !== sw) {
-      dir += (app.env === 'development' ? '/dev' : `/${hash.toString('hex').slice(0, 16)}`)
-    }
-    var asset = app.context.assets[uri]
-    if (!asset) asset = app.context.assets[uri] = { file: file }
-    asset.url = dir + `/${uri}`
-    asset.hash = hash
-    asset.buffer = buff
-  }
 }
 
 // resolve file path (relative to dir) to absolute path
