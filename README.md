@@ -217,7 +217,7 @@ of the optimization used for the entry file.
 - __`--base, -b`__ base path where app will be served
 - __`--port, -p`__ port to use for server
 
-## Service Workers
+### Service Workers
 By supplying the path to a service worker entry file with the `sw` option, jalla
 will build and serve it's bundle from that path.
 
@@ -315,7 +315,7 @@ function clear () {
 
 </details>
 
-## Manifest
+### Manifest
 A bare-bones application manifest is generated based on the projects
 `package.json`. You could either place a `manifest.json` in the assets folder or
 you can generate one using a custom middleware.
