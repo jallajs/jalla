@@ -8,12 +8,13 @@ var assert = require('assert')
 var dedent = require('dedent')
 var getPort = require('get-port')
 var minimist = require('minimist')
-var stack = require('./index')
+var jalla = require('./index')
 
 var argv = minimist(process.argv.slice(2), {
   alias: {
     'service-worker': 'sw',
     'version': 'v',
+    'build': 'b',
     'quiet': 'q',
     'debug': 'd',
     'base': 'b',
@@ -39,6 +40,7 @@ if (argv.help) {
       --service-worker, --sw  entry point for service worker
       --css                   entry point for CSS
       --version, -v           print version
+      --build, -b             write assets to disc and exit
       --quiet, -q             disable printing to console
       --debug, -d             enable node inspector, accepts port
       --base, -b              base path where app will be mounted
@@ -70,16 +72,23 @@ var entry = argv._[0]
 assert(entry, 'jalla: entry file should be supplied')
 
 if (argv.debug) {
-  if (typeof argv.debug === 'number') process.debugPort = argv.debug
+  if (!isNaN(+argv.debug)) process.debugPort = +argv.debug
   process.kill(process.pid, 'SIGUSR1')
 }
 
 var opts = {}
-if (argv['css']) opts.css = argv['css']
+if (argv.css) opts.css = argv.css
 if (argv['service-worker']) opts.sw = argv['service-worker']
 
-var app = stack(path.resolve(process.cwd(), entry), opts)
+var app = jalla(path.resolve(process.cwd(), entry), opts)
 
-getPort({ port: argv.port }).then(function (port) {
-  app.listen(port)
-})
+if (argv.build) {
+  let dir = typeof opts.build === 'string' ? opts.build : 'dist'
+  app.build(path.resolve(process.cwd(), dir), function (err) {
+    process.exit(err ? 1 : 0)
+  })
+} else {
+  getPort({ port: argv.port }).then(function (port) {
+    app.listen(port)
+  })
+}
