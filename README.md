@@ -5,17 +5,16 @@
 [![downloads][downloads-badge]][npm-link]
 [![js-standard-style][standard-badge]][standard-link]
 
-Jalla is an *opinionated* compiler and server in one. It makes web development 
+Jalla is an *opinionated* compiler and server in one. It makes web development
 fast, fun and exceptionally performant.
 
-Jalla is an excellent choice **when static files just don't cut it**. Perhaps 
-you need to render views dynamically, push (HTTP/2) assets or integrate with 
-back end services. We get the same performance level with a heavy cache work 
-described below..
+Jalla is an excellent choice **when static files just don't cut it**. Perhaps
+you need to render views dynamically, push (HTTP/2) assets or integrate with
+back-end services.
 
 In short: a [Koa][koa] server, a [Browserify][browserify] bundler
-for scripts and a [PostCSS][postcss] setup for styles. Documents are compiled 
-using [Documentify][documentify]. Jalla is built with [Choo][choo] in mind and 
+for scripts and a [PostCSS][postcss] for styles. Documents are compiled
+using [Documentify][documentify]. Jalla is built with [Choo][choo] in mind and
 is heavily inspired by [Bankai][bankai].
 
 ## Usage
@@ -23,12 +22,15 @@ is heavily inspired by [Bankai][bankai].
 $ jalla index.js
 ```
 
-### Development vs. Production
+### Working With Jalla
+Jalla has a *watch mode* and a *production mode*. Setting the environment
+variable `NODE_ENV` to anything but `development` will cause jalla to perform
+more expensive compilation and optimizations on your code.
+
 If the environment variable `NODE_ENV` is missing, jalla assumes you are in
-development and will default to *watch-mode* which observes files for changes
-and recompiles them on the fly. Setting `NODE_ENV` to anything but `development`
-will cause jalla to perform more expensive compilation and optimizations on your
-code and will stop watching for file changes.
+development and will default to *watch mode* which observes files for changes
+and recompiles them on the fly.
+
 ```bash
 $ NODE_ENV=production jalla index.js
 ```
@@ -71,7 +73,7 @@ The following babel plugins are added by default:
 transform dynamic import calls to split-require.
 - __[babel-preset-env][babel-preset-env]__: read [`.browserlist`][browserslist]
 file to configure which babel plugins to support the browsers listed therein.
-*Not used in watch-mode*.
+*Not used in watch mode*.
 
 ##### [brfs][brfs]
 Inline static assets in your application using the Node.js `fs` module.
@@ -79,19 +81,19 @@ Inline static assets in your application using the Node.js `fs` module.
 ##### [envify][envify]
 Use environment variables in your code.
 
-##### [nanohtml][nanohtml]
+##### [nanohtml][nanohtml] *(not used in watch mode)*
 Choo-specific optimization which transpiles html templates for increased browser
-performance. *Not used in watch-mode*.
+performance.
 
-##### [tinyify][tinyify]
+##### [tinyify][tinyify] *(not used in watch mode)*
 A while suite of optimizations and minifications removing unused code,
-significantly reducing file size. *Not used in watch-mode*.
+significantly reducing file size.
 
 </details>
 
 ### CSS
 CSS files are located and included automaticly. Whenever a JavaScript module is
-used in your application, jalla will try and find an adjacent `index.css` file 
+used in your application, jalla will try and find an adjacent `index.css` file
 in the same location. Jalla will also respect the `style` field in a modules
 `package.json` to determine which CSS file to include.
 
@@ -139,16 +141,16 @@ work™.
 Inline files imported with `@import`. Works for both local files as well as for
 files in `node_modules`, just like it does in Node.js.
 
-##### [autoprefixer][autoprefixer]
+##### [autoprefixer][autoprefixer] *(not used in watch mode)*
 Automatically add vendor prefixes. Respects [`.browserlist`][browserslist] to
-determine which browsers to support. *Not used in watch-mode*.
+determine which browsers to support.
 
 </details>
 
 ### HTML
 Jalla uses [Documentify][documentify] to compile server-rendered markup.
-Documentify can be configured in the `package.json` (see Documentify 
-documentation). By default, jalla only applies HTML minification using 
+Documentify can be configured in the `package.json` (see Documentify
+documentation). By default, jalla only applies HTML minification using
 [posthtml-minifier][posthtml-minifier].
 
 <details>
@@ -206,7 +208,7 @@ function document () {
 All files located in the root folder `./assets` are automatically being served
 under the webpage root.
 
-### Options
+### CLI Options
 - __`--service-worker, --sw`__ entry point for a service worker, uses a subset
 of the optimization used for the entry file.
 - __`--css`__ explicitly include a css file in the build
@@ -232,8 +234,9 @@ And then starting jalla with the `sw` option.
 $ jalla index.js --sw sw.js
 ```
 
-Information on the main bundle is exposed to the service worker during its build
-and can be accessed as environment variables.
+Information about application bundles and assets are exposed to the service
+worker during its build and can be accessed as environment variables.
+
 - __`process.env.ASSET_LIST`__ a list of URLs to all included assets
 
 
@@ -312,9 +315,19 @@ function clear () {
 
 </details>
 
+## Manifest
+A bare-bones application manifest is generated based on the projects
+`package.json`. You could either place a `manifest.json` in the assets folder or
+you can generate one using a custom middleware.
+
 ## API
-Middleware can be added by creating an instance of the server. The application
-is an instance of [Koa][koa] and supports all [Koa middleware][koa-middleware].
+After instantiating the jalla server, middleware can be added just like you'd do
+with any [Koa][koa] app. The application is an instance of Koa and supports
+[all Koa middleware][koa-middleware].
+
+Jalla will await all middleware to finish before trying to render a HTML response.
+If the response has been redirected (i.e. calling `ctx.redirect`) or if a value
+has been assigned to `ctx.body` jalla will not render any HTML response.
 
 ```javascript
 var mount = require('koa-mount')
@@ -333,7 +346,7 @@ app.use(mount('/robots.txt', function (ctx, next) {
 app.listen(8080)
 ```
 
-### Options
+### API Options
 Options can be supplied as the second argument (`jalla('index.js', opts)`).
 
 - __`sw`__ entry point for a service worker
@@ -402,12 +415,12 @@ but might not be what you need for all your views and endpoints. You will
 probably want to add custom caching middleware or an external caching layer
 ontop of your server for optimal performance.
 
-##### Setting up caching on Cloudflare with jalla
-Cloudflares free teir is an excellent complement to jalla for caching HTML
+##### Setting up Cloudflare caching with jalla
+Cloudflares free tier is an excellent complement to jalla for caching HTML
 responses. You'll need to setup Cloudflare to
-[cache everything][cloudflare-cache-guide] and to respect exiting cache headers.
-This means you'll be able to tell Cloudflare which responses to cache and for
-how long by setting the `s-maxage` header.
+[cache everything][cloudflare-cache-guide] and to respect existing cache
+headers. This means you'll be able to tell Cloudflare which responses to cache
+and for how long by setting the `s-maxage` header.
 
 However, when publishing a new version of your webpage or when the cache should
 be invalidated due to some external service update, you'll need to purge the
@@ -478,8 +491,8 @@ app.use(function (ctx, next) {
 </details>
 
 ### `ctx.assets`
-Compiled assets (js, css) are exposed on the koa `ctx` object as an object with
-the properties `file`, `map`, `buffer` and `url`.
+Compiled assets (scripts and styles) are exposed on the koa `ctx` object as an
+object with the properties `file`, `map`, `buffer` and `url`.
 
 <details>
 <summary>Example adding Link headers for all JS assets</summary>
