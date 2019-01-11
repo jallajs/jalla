@@ -552,6 +552,7 @@ When the server has started and in listening.
 - [ ] Fix CSS asset handling
 - [ ] Add bundle splitting for CSS
 - [ ] Export compiled files to disc
+- [ ] Pretty UI
 
 [choo]: https://github.com/choojs/choo
 [bankai]: https://github.com/choojs/bankai
