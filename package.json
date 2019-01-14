@@ -55,6 +55,7 @@
     "koa-etag": "^3.0.0",
     "koa-route": "^3.2.0",
     "koa-static": "^4.0.3",
+    "mime": "^2.4.0",
     "minimist": "^1.2.0",
     "mkdirp": "^0.5.1",
     "nanohtml": "^1.2.4",

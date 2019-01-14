@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "../bin.js index.js"
+    "start": "../bin.js index.js",
+    "build": "../bin.js index.js --build",
+    "serve": "../bin.js index.js --serve"
   },
   "author": "code and conspire",
   "license": "MIT",

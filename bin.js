@@ -15,6 +15,7 @@ var argv = minimist(process.argv.slice(2), {
     'service-worker': 'sw',
     'version': 'v',
     'build': 'b',
+    'serve': 's',
     'quiet': 'q',
     'debug': 'd',
     'base': 'b',
@@ -41,6 +42,7 @@ if (argv.help) {
       --css                   entry point for CSS
       --version, -v           print version
       --build, -b             write assets to disc and exit
+      --serve, -s             serve built files from disk
       --quiet, -q             disable printing to console
       --debug, -d             enable node inspector, accepts port
       --base, -b              base path where app will be mounted
@@ -78,6 +80,9 @@ if (argv.debug) {
 
 var opts = {}
 if (argv.css) opts.css = argv.css
+if (argv.base) opts.base = argv.base
+if (argv.serve) opts.serve = argv.serve
+if (argv.quiet) opts.quiet = argv.quiet
 if (argv['service-worker']) opts.sw = argv['service-worker']
 
 var app = jalla(path.resolve(process.cwd(), entry), opts)
