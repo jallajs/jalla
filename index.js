@@ -34,9 +34,14 @@ function start (entry, opts = {}) {
   app.use(require('koa-etag')())
 
   if (opts.serve) {
-    let serve = typeof opts.serve === 'string' ? opts.serve : 'dist'
     try {
-      Object.assign(app.context.assets, require(absolute('.map.json', serve)))
+      // pick up build map of existing build
+      let map = require(absolute('.map.json', dist))
+      Object.assign(app.context.assets, map.assets)
+      map.files.forEach(function (file) {
+        // emit faux bundle event
+        app.emit('bundle:file', file)
+      })
     } catch (err) {
       app.emit('error', Error('Could not find build map in serve directory'))
     }
@@ -49,7 +54,6 @@ function start (entry, opts = {}) {
   }
 
   var maxage = (app.env === 'development') ? 0 : 1000 * 60 * 60 * 24 * 365
-  if (app.env === 'development') app.use(serve(dir, { maxage: 0 }))
   app.use(serve(path.resolve(dir, 'assets'), { maxage }))
   app.use(serve(path.resolve(dir, dist), { maxage, setHeaders }))
 
@@ -73,7 +77,7 @@ function start (entry, opts = {}) {
 
 // set custom cache headers for built files
 function setHeaders (res, path) {
-  if (/bundle.*\.map$/.test(path)) res.setHeaders('Cache-Control', 'max-age=0')
+  if (/bundle.*\.map$/.test(path)) res.setHeader('Cache-Control', 'max-age=0')
 }
 
 // resolve file path (relative to dir) to absolute path

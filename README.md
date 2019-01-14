@@ -17,15 +17,14 @@ for scripts and a [PostCSS][postcss] for styles. Documents are compiled
 using [Documentify][documentify]. Jalla is built with [Choo][choo] in mind and
 is heavily inspired by [Bankai][bankai].
 
-## Usage
-```bash
-$ jalla index.js
-```
-
-### Working With Jalla
+## Working with Jalla
 Jalla has a *watch mode* and a *production mode*. Setting the environment
 variable `NODE_ENV` to anything but `development` will cause jalla to perform
 more expensive compilation and optimizations on your code.
+
+```bash
+$ jalla index.js
+```
 
 If the environment variable `NODE_ENV` is missing, jalla assumes you are in
 development and will default to *watch mode* which observes files for changes
@@ -145,6 +144,9 @@ files in `node_modules`, just like it does in Node.js.
 Automatically add vendor prefixes. Respects [`.browserlist`][browserslist] to
 determine which browsers to support.
 
+##### [postcss-csso][postcss-csso] *(not used in watch mode)*
+Cleans, compresses and restructures CSS for optimal performance and file size.
+
 </details>
 
 ### HTML
@@ -213,6 +215,8 @@ under the webpage root.
 of the optimization used for the entry file.
 - __`--css`__ explicitly include a css file in the build
 - __`--quiet, -q`__ disable printing to console
+- __`--build, -b`__ write assets to disc and exit
+- __`--serve, -s`__ serve built files from disk
 - __`--debug, -d`__ enable the node inspector, accepts a port as value
 - __`--base, -b`__ base path where app will be served
 - __`--port, -p`__ port to use for server
@@ -353,6 +357,7 @@ Options can be supplied as the second argument (`jalla('index.js', opts)`).
 - __`css`__ explicitly include a css file in the build
 - __`quiet`__ disable printing to console
 - __`base`__ base path where app will be served
+- __`serve`__ serve built files from disk (path or bool)
 
 ### SSR (Server side render)
 When rendering HTML, jalla will make two render passes; once to allow your views
@@ -549,9 +554,9 @@ When a HTTP response has been sent.
 When the server has started and in listening.
 
 ## Todo
+- [ ] Document build
 - [ ] Fix CSS asset handling
 - [ ] Add bundle splitting for CSS
-- [ ] Export compiled files to disc
 
 [choo]: https://github.com/choojs/choo
 [bankai]: https://github.com/choojs/bankai
@@ -573,6 +578,7 @@ When the server has started and in listening.
 [postcss-import]: https://github.com/postcss/postcss-import
 [postcss-url]: https://github.com/postcss/postcss-url
 [autoprefixer]: https://github.com/postcss/autoprefixer
+[postcss-csso]: https://github.com/lahmatiy/postcss-csso
 [browserify-transform]: https://github.com/browserify/browserify#browserifytransform
 [postcss-load-config]: https://github.com/michael-ciniawsky/postcss-load-config#readme
 [posthtml-minifier]: https://github.com/Rebelmail/posthtml-minifier
