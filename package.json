@@ -42,6 +42,7 @@
     "browserify": "^16.2.2",
     "browserslist": "^3.2.8",
     "chalk": "^2.4.1",
+    "chokidar": "^2.0.4",
     "clear-module": "^3.0.0",
     "concat-stream": "^1.6.2",
     "dedent": "^0.7.0",
