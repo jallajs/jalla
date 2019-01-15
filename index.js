@@ -72,9 +72,10 @@ function start (entry, opts = {}) {
   function onasset (file, uri, buff) {
     if (!served.has(uri)) {
       served.add(uri)
-      app.use(get(uri, function (ctx, next) {
+      var asset = app.context.assets[uri]
+      app.use(get(asset.url, function (ctx, next) {
         ctx.type = mime.getType(uri)
-        ctx.body = app.context.assets[uri].buffer
+        ctx.body = asset.buffer
       }))
     }
   }
