@@ -11,6 +11,7 @@
   "author": "code and conspire",
   "license": "MIT",
   "dependencies": {
+    "chokidar": "^2.0.4",
     "choo": "^6.13.1",
     "choo-lazy-view": "^0.2.0"
   }

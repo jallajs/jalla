@@ -6,6 +6,7 @@ var { get } = require('koa-route')
 var App = require('./lib/app')
 var defer = require('./lib/defer')
 var style = require('./lib/style')
+var assets = require('./lib/assets')
 var script = require('./lib/script')
 var render = require('./lib/render')
 var manifest = require('./lib/manifest')
@@ -51,11 +52,15 @@ function start (entry, opts = {}) {
     if (sw) app.use(serviceWorker(sw, path.basename(sw, '.js'), app))
     app.use(style(css, 'bundle', app))
     app.use(script(entry, 'bundle', app))
+    assets(app)
   }
 
-  var maxage = (app.env === 'development') ? 0 : 1000 * 60 * 60 * 24 * 365
-  app.use(serve(path.resolve(dir, 'assets'), { maxage }))
-  app.use(serve(path.resolve(dir, dist), { maxage, setHeaders }))
+  if (app.env === 'development') {
+    app.use(serve(path.resolve(dir, dist), {
+      maxage: 60 * 60 * 24 * 365,
+      setHeaders
+    }))
+  }
 
   app.use(render(entry, app))
   app.use(get('/manifest.json', manifest(app)))
@@ -76,6 +81,7 @@ function start (entry, opts = {}) {
 }
 
 // set custom cache headers for built files
+// (obj, str) -> void
 function setHeaders (res, path) {
   if (/bundle.*\.map$/.test(path)) res.setHeader('Cache-Control', 'max-age=0')
 }
