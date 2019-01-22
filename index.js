@@ -56,7 +56,7 @@ function start (entry, opts = {}) {
     assets(app)
   }
 
-  if (app.env === 'development') {
+  if (app.env !== 'development') {
     app.use(serve(path.resolve(dir, dist), {
       maxage: 60 * 60 * 24 * 365,
       setHeaders
