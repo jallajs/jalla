@@ -48,6 +48,7 @@ function start (entry, opts = {}) {
     }
   } else {
     app.on('bundle:asset', onasset)
+    app.on('register:asset', onasset)
     if (app.env !== 'development') app.use(defer(app, (ctx, next) => next()))
     if (sw) app.use(serviceWorker(sw, path.basename(sw, '.js'), app))
     app.use(style(css, 'bundle', app))
