@@ -49,9 +49,14 @@ function start (entry, opts = {}) {
 
     app.use(serve(path.resolve(dir, dist), { maxage: 60 * 60 * 24 * 365 }))
   } else {
+    // serve assets as they are encountered in build
     app.on('bundle:asset', onasset)
     app.on('register:asset', onasset)
+
+    // defer any response until everything is bundled (non-watch mode)
     if (app.env !== 'development') app.use(defer(app, (ctx, next) => next()))
+
+    // compile and serve bundles and assets
     if (sw) app.use(serviceWorker(sw, path.basename(sw, '.js'), app))
     app.use(style(css, 'bundle', app))
     app.use(script(entry, 'bundle', app))
@@ -66,13 +71,21 @@ function start (entry, opts = {}) {
   // serve assets from memory
   // (str, str, Buffer) -> void
   function onasset (file, uri, buff) {
-    if (!served.has(uri)) {
-      served.add(uri)
+    if (!served.has(file)) {
+      served.add(file)
       var asset = app.context.assets[uri]
-      app.use(get(asset.url, function (ctx, next) {
+      var middleware = get(asset.url, function (ctx, next) {
+        if (!served.has(file)) return next()
         ctx.type = mime.getType(uri)
         ctx.body = asset.buffer
-      }))
+      })
+      app.use(middleware)
+      app.on('remove:asset', function onremove (removed) {
+        if (removed !== file) return
+        served.delete(file)
+        app.removeListener('remove:asset', onremove)
+        app.middleware.splice(app.middleware.indexOf(middleware), 1)
+      })
     }
   }
 }
