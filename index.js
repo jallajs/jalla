@@ -46,6 +46,8 @@ function start (entry, opts = {}) {
     } catch (err) {
       app.emit('error', Error('Could not find build map in serve directory'))
     }
+
+    app.use(serve(path.resolve(dir, dist), { maxage: 60 * 60 * 24 * 365 }))
   } else {
     app.on('bundle:asset', onasset)
     app.on('register:asset', onasset)
@@ -54,13 +56,6 @@ function start (entry, opts = {}) {
     app.use(style(css, 'bundle', app))
     app.use(script(entry, 'bundle', app))
     assets(app)
-  }
-
-  if (app.env !== 'development') {
-    app.use(serve(path.resolve(dir, dist), {
-      maxage: 60 * 60 * 24 * 365,
-      setHeaders
-    }))
   }
 
   app.use(render(entry, app))
@@ -80,12 +75,6 @@ function start (entry, opts = {}) {
       }))
     }
   }
-}
-
-// set custom cache headers for built files
-// (obj, str) -> void
-function setHeaders (res, path) {
-  if (/bundle.*\.map$/.test(path)) res.setHeader('Cache-Control', 'max-age=0')
 }
 
 // resolve file path (relative to dir) to absolute path
