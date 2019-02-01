@@ -10,17 +10,18 @@ var getPort = require('get-port')
 var minimist = require('minimist')
 var jalla = require('./index')
 
+var COMMANDS = ['start', 'build', 'serve']
+
 var argv = minimist(process.argv.slice(2), {
   alias: {
     'service-worker': 'sw',
-    'version': 'v',
-    'build': 'b',
-    'serve': 's',
+    'dir': 'd',
     'quiet': 'q',
-    'debug': 'd',
+    'inspect': 'i',
     'base': 'b',
     'port': 'p',
-    'help': 'h'
+    'help': 'h',
+    'version': 'v'
   },
   default: {
     port: process.env.PORT || 8080
@@ -35,18 +36,22 @@ var argv = minimist(process.argv.slice(2), {
 if (argv.help) {
   console.log('\n', dedent`
     ${chalk.dim('usage')}
-      ${chalk.cyan.bold('jalla')} [opts] <entry>
+      ${chalk.cyan.bold('jalla')} [command] [opts] <entry>
+
+    ${chalk.dim('commands')}
+      start                   start server and compile assets (default)
+      build                   build assets to disk
+      serve                   start server and serve built assets
 
     ${chalk.dim('options')}
-      --service-worker, --sw  entry point for service worker
       --css                   entry point for CSS
-      --version, -v           print version
-      --build, -b             write assets to disc and exit
-      --serve, -s             serve built files from disk
+      --service-worker, --sw  entry point for service worker
+      --dir, -d               output directory, use with ${chalk.bold('build')} and ${chalk.bold('serve')}
       --quiet, -q             disable printing to console
-      --debug, -d             enable node inspector, accepts port
+      --inspect, -i           enable node inspector, accepts port
       --base, -b              base path where app will be mounted
       --port, -p              server port
+      --version, -v           print version
       --help, -h              show this help text
 
     ${chalk.dim('examples')}
@@ -56,11 +61,8 @@ if (argv.help) {
       ${chalk.bold('start development server with CSS and service worker entries')}
       jalla index.js --sw sw.js --css index.css
 
-      ${chalk.bold('start production server on port 3000')}
-      NODE_ENV=production jalla index.js -p 3000
-
-      ${chalk.bold('debug application on port 9229')}
-      jalla index.js --debug 9229
+      ${chalk.bold('build and start production server')}
+      NODE_ENV=production jalla build index.js && jalla serve index.js
   `)
   process.exit(0)
 }
@@ -70,25 +72,27 @@ if (argv.version) {
   process.exit(0)
 }
 
-var entry = argv._[0]
+var entry = argv._[argv._.length - 1]
+var command = argv._.length > 1 ? argv._[0] : 'start'
+assert(COMMANDS.includes(command), `jalla: command "${command}" not recognized`)
 assert(entry, 'jalla: entry file should be supplied')
 
-if (argv.debug) {
-  if (!isNaN(+argv.debug)) process.debugPort = +argv.debug
+if (argv.inspect) {
+  if (typeof argv.inspect === 'number') process.debugPort = argv.inspect
   process.kill(process.pid, 'SIGUSR1')
 }
 
 var opts = {}
 if (argv.css) opts.css = argv.css
 if (argv.base) opts.base = argv.base
-if (argv.serve) opts.serve = argv.serve
 if (argv.quiet) opts.quiet = argv.quiet
+if (command === 'serve') opts.serve = argv.dir || true
 if (argv['service-worker']) opts.sw = argv['service-worker']
 
 var app = jalla(path.resolve(process.cwd(), entry), opts)
 
-if (argv.build) {
-  let dir = typeof opts.build === 'string' ? opts.build : 'dist'
+if (command === 'build') {
+  let dir = typeof argv.dir === 'string' ? argv.dir : 'dist'
   app.build(path.resolve(process.cwd(), dir), function (err) {
     process.exit(err ? 1 : 0)
   })
