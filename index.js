@@ -1,14 +1,12 @@
 var path = require('path')
 var assert = require('assert')
 var serve = require('koa-static')
-var { get } = require('koa-route')
 var App = require('./lib/app')
 var defer = require('./lib/defer')
 var style = require('./lib/style')
 var assets = require('./lib/assets')
 var script = require('./lib/script')
 var render = require('./lib/render')
-var manifest = require('./lib/manifest')
 var serviceWorker = require('./lib/service-worker')
 
 module.exports = start
@@ -40,7 +38,7 @@ function start (entry, opts = {}) {
       // emit bundle event for all files in build
       map.files.forEach((file) => app.emit('bundle:file', file))
     } catch (err) {
-      app.emit('error', Error('Could not find build map in serve directory'))
+      app.emit('error', Error('Failed to load build map from serve directory'))
     }
     // serve build dir
     app.use(serve(path.resolve(dir, dist), { maxage: 60 * 60 * 24 * 365 }))
@@ -56,7 +54,6 @@ function start (entry, opts = {}) {
   }
 
   app.use(render(entry, app))
-  app.use(get('/manifest.json', manifest(app)))
 
   return app
 }
