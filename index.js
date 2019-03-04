@@ -3,11 +3,7 @@ var assert = require('assert')
 var serve = require('koa-static')
 var App = require('./lib/app')
 var defer = require('./lib/defer')
-var style = require('./lib/style')
-var assets = require('./lib/assets')
-var script = require('./lib/script')
 var render = require('./lib/render')
-var serviceWorker = require('./lib/service-worker')
 
 module.exports = start
 
@@ -43,6 +39,12 @@ function start (entry, opts = {}) {
     // serve build dir
     app.use(serve(path.resolve(dir, dist), { maxage: 60 * 60 * 24 * 365 }))
   } else {
+    // spare serverless platforms from having to import build modules
+    let style = require('./lib/style')
+    let assets = require('./lib/assets')
+    let script = require('./lib/script')
+    let serviceWorker = require('./lib/service-worker')
+
     // defer any response until everything is bundled (non-watch mode)
     if (app.env !== 'development') app.use(defer(app, (ctx, next) => next()))
 
