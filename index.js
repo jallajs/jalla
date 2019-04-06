@@ -29,7 +29,7 @@ function start (entry, opts = {}) {
   if (opts.serve) {
     try {
       // pick up build map of existing build
-      let map = require(absolute('.map.json', dist))
+      let map = require(absolute('__stat__.json', dist))
       Object.assign(app.context.assets, map.assets)
       // emit bundle event for all files in build
       map.files.forEach((file) => app.emit('bundle:file', file))
