@@ -14,8 +14,8 @@ function start (entry, opts = {}) {
   var dir = path.dirname(entry)
   var sw = opts.sw && absolute(opts.sw, dir)
   var css = opts.css && absolute(opts.css, dir)
-  var dist = typeof opts.serve === 'string' ? absolute(opts.serve) : 'dist'
-  var app = new App(entry, Object.assign({}, opts, { sw, css }))
+  var dist = opts.serve && absolute(typeof opts.serve === 'string' ? opts.serve : 'dist', dir)
+  var app = new App(entry, Object.assign({}, opts, { sw, css, dist }))
 
   app.use(async function (ctx, next) {
     var start = Date.now()
@@ -37,7 +37,7 @@ function start (entry, opts = {}) {
       app.emit('error', Error('Failed to load build map from serve directory'))
     }
     // serve build dir
-    app.use(serve(path.resolve(dir, dist), { maxage: 60 * 60 * 24 * 365 }))
+    app.use(serve(dist, { maxage: 60 * 60 * 24 * 365 }))
   } else {
     // spare serverless platforms from having to import build modules
     let style = require('./lib/style')
