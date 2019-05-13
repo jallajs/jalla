@@ -37,7 +37,7 @@ function start (entry, opts = {}) {
       app.emit('error', Error('Failed to load build map from serve directory'))
     }
     // serve build dir
-    app.use(serve(dist, { maxage: 60 * 60 * 24 * 365 }))
+    app.use(serve(dist, { maxage: 1000 * 60 * 60 * 24 * 365 }))
   } else {
     // spare serverless platforms from having to import build modules
     let style = require('./lib/style')
