@@ -1,8 +1,6 @@
 var path = require('path')
 var assert = require('assert')
-var serve = require('koa-static')
 var App = require('./lib/app')
-var defer = require('./lib/defer')
 var render = require('./lib/render')
 
 module.exports = start
@@ -28,31 +26,17 @@ function start (entry, opts = {}) {
 
   if (opts.serve) {
     try {
-      // pick up build map of existing build
-      let map = require(absolute('__stat__.json', dist))
-      Object.assign(app.context.assets, map.assets)
-      // emit bundle event for all files in build
-      map.files.forEach((file) => app.emit('bundle:file', file))
+      // pick up stat of existing build
+      let stat = require(path.resolve(dist, '__stat__.json'))
+      for (let asset of stat.assets) {
+        app.pipeline.assets.set(asset.id, asset)
+      }
+      // use bundled entry file for rendering
+      // TODO: compile node bundle
+      entry = path.resolve(dist, app.pipeline.assets.get('bundle.js'))
     } catch (err) {
-      app.emit('error', Error('Failed to load build map from serve directory'))
+      this.emit('error', Error('Failed to load stat from serve directory'))
     }
-    // serve build dir
-    app.use(serve(dist, { maxage: 1000 * 60 * 60 * 24 * 365 }))
-  } else {
-    // spare serverless platforms from having to import build modules
-    let style = require('./lib/style')
-    let assets = require('./lib/assets')
-    let script = require('./lib/script')
-    let serviceWorker = require('./lib/service-worker')
-
-    // defer any response until everything is bundled (non-watch mode)
-    if (app.env !== 'development') app.use(defer(app, (ctx, next) => next()))
-
-    // compile and serve bundles and assets
-    if (sw) app.use(serviceWorker(sw, path.basename(sw, '.js'), app))
-    app.use(style(css, 'bundle', app))
-    app.use(script(entry, 'bundle', app))
-    app.use(assets(app))
   }
 
   app.use(render(entry, app))
