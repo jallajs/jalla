@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "../bin.js index.js",
-    "build": "../bin.js build index.js",
+    "start": "../bin.js index.js --sw sw.js",
+    "build": "../bin.js build index.js --sw sw.js",
     "serve": "../bin.js serve index.js"
   },
   "author": "code and conspire",
@@ -13,6 +13,7 @@
   "dependencies": {
     "chokidar": "^2.0.4",
     "choo": "^6.13.1",
-    "choo-lazy-view": "^0.2.0"
+    "choo-lazy-view": "^0.2.0",
+    "choo-service-worker": "^2.4.0"
   }
 }
