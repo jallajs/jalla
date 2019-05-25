@@ -4,6 +4,8 @@ var choo = require('choo')
 
 var app = choo()
 
+app.use(require('choo-service-worker')('/sw.js'))
+
 app.route('/', main)
 app.route('/a', LazyView.create(() => import('./a')))
 app.route('/b', LazyView.create(() => import('./b')))
