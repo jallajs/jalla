@@ -553,12 +553,6 @@ When a HTTP response has been sent.
 #### `app.on('start', callback(port))`
 When the server has started and in listening.
 
-## Todo
-- [ ] Document build
-- [ ] Fix CSS asset handling
-- [ ] Add bundle splitting for CSS
-- [ ] Pretty UI
-
 [choo]: https://github.com/choojs/choo
 [bankai]: https://github.com/choojs/bankai
 [koa]: https://github.com/koajs/koa
