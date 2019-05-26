@@ -51,7 +51,7 @@
     "convert-source-map": "^1.6.0",
     "dedent": "^0.7.0",
     "documentify": "^3.2.2",
-    "dropcss": "^1.0.7",
+    "dropcss": "^1.0.9",
     "envify": "^4.1.0",
     "get-port": "^3.2.0",
     "hstream": "^1.2.0",
