@@ -1,5 +1,8 @@
+var util = require('util')
 var path = require('path')
 var assert = require('assert')
+var serve = require('koa-static')
+var compose = require('koa-compose')
 var App = require('./lib/app')
 var render = require('./lib/render')
 
@@ -10,10 +13,15 @@ function start (entry, opts = {}) {
   entry = absolute(entry)
 
   var dir = path.dirname(entry)
-  var sw = opts.sw && absolute(opts.sw, dir)
-  var css = opts.css && absolute(opts.css, dir)
-  var dist = opts.serve && absolute(typeof opts.serve === 'string' ? opts.serve : 'dist', dir)
-  var app = new App(entry, Object.assign({}, opts, { sw, css, dist }))
+
+  opts = Object.assign({}, opts, {
+    serve: Boolean(opts.serve),
+    sw: opts.sw && absolute(opts.sw, dir),
+    css: opts.css && absolute(opts.css, dir),
+    dist: absolute(typeof opts.serve === 'string' ? opts.serve : 'dist', dir)
+  })
+
+  var app = new App(entry, opts)
 
   app.use(async function (ctx, next) {
     var start = Date.now()
@@ -21,24 +29,39 @@ function start (entry, opts = {}) {
     app.emit('timing', Date.now() - start, ctx)
   })
 
-  app.use(require('koa-conditional-get')())
-  app.use(require('koa-etag')())
-
   if (opts.serve) {
-    try {
-      // pick up stat of existing build
-      let stat = require(path.resolve(dist, '__stat__.json'))
-      for (let asset of stat.assets) {
-        app.pipeline.assets.set(asset.id, asset)
+    let pub = path.resolve(opts.dist, 'public')
+    app.use(serve(pub, { maxage: 1000 * 60 * 60 * 24 * 365 }))
+  } else {
+    let state = Object.assign({
+      env: app.env,
+      base: opts.base || '',
+      watch: typeof opts.watch === 'undefined'
+        ? app.env === 'development'
+        : opts.watch
+    }, opts)
+    let bundle = util.promisify(app.pipeline.bundle.bind(app.pipeline))
+    let init = bundle(entry, state)
+
+    app.use(compose([
+      // defer response until initial bundle finishes
+      (ctx, next) => init.then(() => next()),
+      // serve bundeled assets
+      app.pipeline.middleware(),
+      // apply cache control
+      function (ctx, next) {
+        if (ctx.body) {
+          let cache = this.env !== 'development' && !opts.watch
+          let maxAge = cache ? 60 * 60 * 24 * 365 : 0
+          ctx.set('Cache-Control', `public, max-age=${maxAge}`)
+        }
+        return next()
       }
-      // use bundled entry file for rendering
-      // TODO: compile node bundle
-      entry = path.resolve(dist, app.pipeline.assets.get('bundle.js'))
-    } catch (err) {
-      this.emit('error', Error('Failed to load stat from serve directory'))
-    }
+    ]))
   }
 
+  app.use(require('koa-conditional-get')())
+  app.use(require('koa-etag')())
   app.use(render(entry, app))
 
   return app

@@ -8,6 +8,7 @@ var assert = require('assert')
 var dedent = require('dedent')
 var getPort = require('get-port')
 var minimist = require('minimist')
+var App = require('./lib/app')
 var jalla = require('./index')
 
 var COMMANDS = ['start', 'build', 'serve']
@@ -89,14 +90,14 @@ if (argv.quiet) opts.quiet = argv.quiet
 if (command === 'serve') opts.serve = argv.dir || true
 if (argv['service-worker']) opts.sw = argv['service-worker']
 
-var app = jalla(path.resolve(process.cwd(), entry), opts)
-
 if (command === 'build') {
+  let app = new App(path.resolve(process.cwd(), entry), opts)
   let dir = typeof argv.dir === 'string' ? argv.dir : 'dist'
   app.build(path.resolve(process.cwd(), dir), function (err) {
     process.exit(err ? 1 : 0)
   })
 } else {
+  let app = jalla(path.resolve(process.cwd(), entry), opts)
   getPort({ port: argv.port }).then(function (port) {
     app.listen(port)
   })
