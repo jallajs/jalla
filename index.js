@@ -31,7 +31,7 @@ function start (entry, opts = {}) {
 
   if (opts.serve) {
     let pub = path.resolve(opts.dist, 'public')
-    app.use(serve(pub, { maxage: 1000 * 60 * 60 * 24 * 365 }))
+    app.use(serve(pub, { setHeaders }))
   } else {
     let state = Object.assign({
       env: app.env,
@@ -62,9 +62,13 @@ function start (entry, opts = {}) {
 
   app.use(require('koa-conditional-get')())
   app.use(require('koa-etag')())
-  app.use(render(entry, app))
+  app.use(render(app))
 
   return app
+}
+
+function setHeaders (res, path, stats) {
+  res.setHeader('Cache-Control', `public, maxage=${60 * 60 * 24 * 365}`)
 }
 
 // resolve file path (relative to dir) to absolute path
