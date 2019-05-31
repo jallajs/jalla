@@ -67,7 +67,7 @@
     "minimist": "^1.2.0",
     "mkdirp": "^0.5.1",
     "nanobus": "^4.4.0",
-    "nanohtml": "^1.6.2",
+    "nanohtml": "^1.6.3",
     "ora": "^3.0.0",
     "pirates": "^4.0.0",
     "postcss": "^7.0.5",
