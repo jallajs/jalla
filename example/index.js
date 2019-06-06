@@ -1,16 +1,17 @@
-var LazyView = require('choo-lazy-view')
+var lazy = require('choo-lazy-view')
 var html = require('choo/html')
 var choo = require('choo')
 
 var app = choo()
 
+app.use(lazy)
 app.use(require('choo-service-worker')('/sw.js'))
 
 app.route('/', main)
-app.route('/a', LazyView.create(() => import('./a')))
-app.route('/b', LazyView.create(() => import('./b')))
+app.route('/a', lazy(() => import('./a')))
+app.route('/b', lazy(() => import('./b')))
 
-module.exports = LazyView.mount(app, 'body')
+module.exports = app.mount('body')
 
 function main () {
   return html`
