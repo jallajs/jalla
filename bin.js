@@ -20,6 +20,7 @@ var argv = minimist(process.argv.slice(2), {
     'quiet': 'q',
     'inspect': 'i',
     'base': 'b',
+    'watch': 'w',
     'port': 'p',
     'help': 'h',
     'version': 'v'
@@ -51,6 +52,7 @@ if (argv.help) {
       --quiet, -q             disable printing to console
       --inspect, -i           enable node inspector, accepts port
       --base, -b              base path where app will be mounted
+      --watch, -w             enable watch mode (default: NODE_ENV === development)
       --port, -p              server port
       --version, -v           print version
       --help, -h              show this help text
@@ -89,8 +91,10 @@ if (argv.base) opts.base = argv.base
 if (argv.quiet) opts.quiet = argv.quiet
 if (command === 'serve') opts.serve = argv.dir || true
 if (argv['service-worker']) opts.sw = argv['service-worker']
+if (typeof argv.watch !== 'undefined') opts.watch = Boolean(argv.watch)
 
 if (command === 'build') {
+  opts.watch = false
   let app = new App(path.resolve(process.cwd(), entry), opts)
   let dir = typeof argv.dir === 'string' ? argv.dir : 'dist'
   app.build(path.resolve(process.cwd(), dir), function (err) {
