@@ -13,12 +13,14 @@ function start (entry, opts = {}) {
   entry = absolute(entry)
 
   var dir = path.dirname(entry)
+  var dist = opts.dist
+  if (!dist) dist = typeof opts.serve === 'string' ? opts.serve : 'dist'
 
   opts = Object.assign({}, opts, {
+    dist: absolute(dist, dir),
     serve: Boolean(opts.serve),
     sw: opts.sw && absolute(opts.sw, dir),
-    css: opts.css && absolute(opts.css, dir),
-    dist: absolute(typeof opts.serve === 'string' ? opts.serve : 'dist', dir)
+    css: opts.css && absolute(opts.css, dir)
   })
 
   var app = new App(entry, opts)
@@ -67,6 +69,8 @@ function start (entry, opts = {}) {
   return app
 }
 
+// set static asset headers
+// (obj, str, obj) -> void
 function setHeaders (res, path, stats) {
   res.setHeader('Cache-Control', `public, maxage=${60 * 60 * 24 * 365}`)
 }
