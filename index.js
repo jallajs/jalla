@@ -55,7 +55,8 @@ function start (entry, opts = {}) {
         if (ctx.body) {
           let cache = this.env !== 'development' && !opts.watch
           let maxAge = cache ? 60 * 60 * 24 * 365 : 0
-          ctx.set('Cache-Control', `public, max-age=${maxAge}`)
+          let value = `${cache ? 'public, ' : ''}max-age=${maxAge}`
+          ctx.set('Cache-Control', value)
         }
         return next()
       }
