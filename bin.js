@@ -48,11 +48,11 @@ if (argv.help) {
     ${chalk.dim('options')}
       --css                   entry point for CSS
       --service-worker, --sw  entry point for service worker
+      --base, -b              base path where app will be mounted
+      --watch, -w             enable watch mode (default in development)
       --dir, -d               output directory, use with ${chalk.bold('build')} and ${chalk.bold('serve')}
       --quiet, -q             disable printing to console
       --inspect, -i           enable node inspector, accepts port
-      --base, -b              base path where app will be mounted
-      --watch, -w             enable watch mode (default: NODE_ENV === development)
       --port, -p              server port
       --version, -v           print version
       --help, -h              show this help text

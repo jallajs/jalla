@@ -5,34 +5,377 @@
 [![downloads][downloads-badge]][npm-link]
 [![js-standard-style][standard-badge]][standard-link]
 
-Jalla is an *opinionated* compiler and server in one. It makes web development
-fast, fun and exceptionally performant.
+Jalla is a [Choo][choo] compiler and server in one, making web development fast,
+fun and exceptionally performant.
 
 Jalla is an excellent choice **when static files just don't cut it**. Perhaps
-you need to render views dynamically, push (HTTP/2) assets or integrate with
-back-end services.
+you need to render views dynamically, set custom headers or integrate an API.
 
-In short: a [Koa][koa] server, a [Browserify][browserify] bundler
-for scripts and a [PostCSS][postcss] for styles. Documents are compiled
-using [Documentify][documentify]. Jalla is built with [Choo][choo] in mind and
-is heavily inspired by [Bankai][bankai].
+In short, Jalla is a [Koa][koa] server, a [Browserify][browserify] bundler
+for scripts and a [PostCSS][postcss] processor for styles. Documents are
+compiled using [Documentify][documentify]. And it's all configurable as your're
+used to.
 
-## Working with Jalla
-Jalla has a *watch mode* and a *production mode*. Setting the environment
-variable `NODE_ENV` to anything but `development` will cause jalla to perform
-more expensive compilation and optimizations on your code.
+- [Usage](#usage)
+- [Options](#options)
+- [Build](#build)
+- [Serve](#serve)
+- [API](#api)
+- [Server Side Rendering](#server-side-rendering)
+  - [Custom HTML](#custom-html)
+  - [Prefetching data](#prefetching-data)
+- [Assets](#assets)
+- [Manifest](#manifest)
+- [Service Workers](#service-workers)
+- [Advanced Usage](#advanced-usage)
+- [Configuration](#configuration)
+  - [Scripts](#scripts)
+  - [Styles](#styles)
+  - [HTML](#html)
+- [License](#license)
+
+## Usage
+Jalla performs a series of optimizations when compiling your code. By default
+it will enter development mode – meaning fast compilation times and automatic
+recompilation when files are updated.
+
+The fastes way to get up and running is by using the CLI and pointing it to your
+Choo app entry point. If you name your CSS files `index.css` and place them
+adjacent to your script files, they will be automatically detected and included.
 
 ```bash
 $ jalla index.js
 ```
 
-If the environment variable `NODE_ENV` is missing, jalla assumes you are in
-development and will default to *watch mode* which observes files for changes
-and recompiles them on the fly.
+Setting the environment variable `NODE_ENV` to _anything other than_
+`development` will cause jalla to perform more expensive compilation and optimizations on your code. Taking longer to compile but making it faster to
+run.
 
 ```bash
 $ NODE_ENV=production jalla index.js
 ```
+
+## Options
+- __`--css`__ explicitly include a css file in the build
+- __`--service-worker, --sw`__ entry point for a service worker
+- __`--base, -b`__ base path where app will be served
+- __`--watch, -w`__ watch files for changes (default in `development`)
+- __`--dir, -d`__ output directory, use with [build](#build) and [serve](#serve)
+- __`--quiet, -q`__ disable printing to console
+- __`--inspect, -i`__ enable the node inspector, accepts a port as value
+- __`--port, -p`__ port to use for server
+
+## Build
+Jalla can write all assets to disk, and then serve them statically. This greatly
+increases the server startup times and makes the server more resilient to
+failure or sleep. This is especially usefull for serverless plarforms, such as
+[now](https://zeit.co/now) or [AWS Lambda](https://aws.amazon.com/lambda/)
+et. al.
+
+By default files will be written to the folder `dist`, but this can be changed
+using the `dir` option.
+
+```bash
+$ NODE_ENV=production jalla build index.js --dir output
+```
+
+## Serve
+For fast server start up times, use the `serve` command. In serve mode, jalla
+will not compile any assets but instead serve built assets produced by the
+[build](#build) command.
+
+By default jalla will look for built files in the `dist` folder. Use the `dir`
+option to change this.
+
+```
+$ NODE_ENV=production jalla serve --dir output
+```
+
+## API
+After instantiating the jalla server, middleware can be added just like you'd do
+with any [Koa][koa] app. The application is an instance of Koa and supports
+[all Koa middleware][koa-middleware].
+
+Just like the [CLI](#usage), the programatic API accepts a Choo app entry point
+as it's first argument, followed by options.
+
+```javascript
+var jalla = require('jalla')
+var app = jalla('index.js', {
+  sw: 'sw.js',
+  serve: process.env.NODE_ENV === 'production'
+})
+
+app.listen(8080)
+```
+
+## Server Side Rendering
+For every request that comes in (which accepts HTML and is not an asset), unless
+handeled by custom middleware, jalla will try and render an HTML response. Jalla
+will await all custom  middleware to finish before trying to render a HTML
+response. If the response has been redirected (i.e. calling `ctx.redirect`) or
+if a value has been assigned to `ctx.body` jalla will not render any HTML
+response.
+
+```javascript
+var mount = require('koa-mount')
+var jalla = require('jalla')
+var app = jalla('index.js')
+
+// only allow robots in production
+app.use(mount('/robots.txt', function (ctx, next) {
+  ctx.type = 'text/plain'
+  ctx.body = `
+    User-agent: *
+    Disallow: ${process.env.NODE_ENV === 'production' ? '' : '/'}
+  `
+}))
+
+app.listen(8080)
+```
+
+### Custom HTML
+By default, Jalla will render your app in an empty HTML document, injecting
+assets and initial state. You can override the default empty document by adding
+an `index.html` file adjacent to the application entry file.
+
+You can inform jalla of where in the document you'd like to mount the
+application by exporting the Choo app instance after calling `.mount()`.
+
+```javascript
+// app.js
+module.exports = app.mount('#app')
+```
+
+```html
+<!-- index.html -->
+<body>
+  <div id="app"></div>
+  <footer>© 2019</footer>
+</body>
+```
+
+### Prefetching data
+Often times you'll need to fetch some data to render the application views. For
+this, jalla will expose an array, `prefetch`, on the application state. Jalla
+will render the app once and then wait for the promises in the array to resolve
+before issuing another render pass using the state generated the first time.
+
+```javascript
+// store.js
+module.exports = function (state, emitter) {
+  state.data = state.data || null
+
+  emitter.on('fetch', function () {
+    var request = window.fetch('/my/api')
+      .then((res) => res.json())
+      .then(function (data) {
+        state.data = data
+        emitter.emit('render')
+      })
+
+    // expose request to jalla during server side render
+    if (state.prefetch) state.prefetch.push(request)
+  })
+}
+```
+
+
+### `ctx.state`
+The data stored in the state object after all middleware has run will be used
+as state when rendering the HTML response. The resulting application state will
+be exposed to the client as `window.initialState` and will be automatically
+picked up by Choo. Using `ctx.state` is how you bootstrap your client with
+server generated content.
+
+Meta data for the page being rendered can be added to `ctx.state.meta`. A
+`<meta>` tag will be added to the header for every property therein.
+
+<details>
+<summary>Example decorating ctx.state</summary>
+
+```javascript
+var geoip = require('geoip-lite')
+
+app.use(function (ctx, next) {
+  if (ctx.accepts('html')) {
+    ctx.state.location = geoip.lookup(ctx.ip)
+  }
+  return next()
+})
+```
+
+</details>
+
+### `ctx.assets`
+Compiled assets are exposed on `ctx.assets` as a `Map` object. The assets hold
+data such as the asset url, size and hash. There's also a `read` method for
+retreiving the asset buffer.
+
+<details>
+<summary>Example adding Link headers for all JS assets</summary>
+
+```javascript
+app.use(function (ctx, next) {
+  if (!ctx.accepts('html')) return next()
+
+  for (let [id, asset] of ctx.assets) {
+    if (id !== 'bundle.js' && /\.js$/.test(id)) {
+      ctx.append('Link', `<${asset.url}>; rel=preload; as=script`)
+    }
+  }
+
+  return next()
+})
+```
+
+</details>
+
+## Assets
+Static assets can be placed in an `assets` folder adjacent to the Choo app entry
+file. Files in the assets folder will be served statically by jalla.
+
+## Manifest
+A bare-bones application manifest is generated based on the projects
+`package.json`. You can either place a custom `manifest.json` in the
+[assets](#assets) folder or you can generate one using a custom middleware.
+
+### Service Workers
+By supplying the path to a service worker entry file with the `sw` option, jalla
+will build and serve it's bundle from that path.
+
+Registering a service worker with a Choo app is easily done using
+[choo-service-worker][choo-service-worker].
+
+```javascript
+// index.js
+app.use(require('choo-service-worker')('/sw.js'))
+```
+
+And then starting jalla with the `sw` option.
+
+```bash
+$ jalla index.js --sw sw.js
+```
+
+Information about application assets are exposed to the service worker during
+its build and can be accessed as an environment variable.
+
+- __`process.env.ASSET_LIST`__ a list of URLs to all included assets
+
+
+<details>
+<summary>Example service worker</summary>
+
+```javascript
+// index.json
+var choo = require('choo')
+var app = choo()
+
+app.route('/', require('./views/home'))
+app.use(require('choo-service-worker')('/sw.js'))
+
+module.exports = app.mount('body')
+```
+
+```javascript
+// sw.js
+var CACHE_KEY = process.env.npm_package_version
+var FILES = ['/'].concat(process.env.ASSET_LIST)
+
+self.addEventListener('install', function oninstall (event) {
+  // cache landing page and all assets once service worker is installed
+  event.waitUntil(
+    caches
+      .open(CACHE_KEY)
+      .then((cache) => cache.addAll(FILES))
+      .then(() => self.skipWaiting())
+  )
+})
+
+self.addEventListener('activate', function onactivate (event) {
+  // clear old caches on activate
+  event.waitUntil(clear().then(() => self.clients.claim()))
+})
+
+self.addEventListener('fetch', function onfetch (event) {
+  // try and perform fetch, falling back to cached response
+  event.respondWith(caches.open(CACHE_KEY).then(async function (cache) {
+    try {
+      var cached = await cache.match(req)
+      var response = self.fetch(event.request)
+      if (req.method.toUpperCase() === 'GET') {
+        await cache.put(req, response.clone())
+      }
+      return response
+    } catch (err) {
+      if (cached) return cached
+      throw err
+    }
+  }))
+})
+
+// clear application cache
+// () -> Promise
+function clear () {
+  return caches.keys().then(function (keys) {
+    var caches = keys.filter((key) => key !== CACHE_KEY)
+    return Promise.all(keys.map((key) => caches.delete(key)))
+  })
+}
+```
+
+</details>
+
+## Advanced Usage
+If you need to jack into the compilation and build pipeline of jalla, there's a
+`pipeline` utility attached to the app instance. The pipline is labeled so that
+you can hook into any specific step of the compilation to add or inspect assets.
+
+Using the method `get` you can retrieve an array that holds the differnt steps
+associated with a specific compilation step. You may push your own functions to
+this array to have them added to the pipeline.
+
+The labels on the pipeline are:
+- __`scripts`__ compiles the main bundle and any dynamic bundles
+- __`styles`__ detect CSS files and compile into single bundle
+- __`assets`__ locate static assets
+- __`manifest`__ generate manifest.json file unless one already exists
+- __`service-worker`__ compile the service worker
+- __`build`__ write files to disk
+
+The functions in the pipeline have a similar signature to that of Choo routes.
+They are instantiated with a state object and a function for emitting events.
+A pipline function should return a function which will be called whenever jalla
+is compiling the app. The pipline steps are called in series, and have access
+to the assets and dependencies of all prior steps.
+
+```javascript
+var fs = require('fs')
+var jalla = require('jalla')
+var crypto = require('crypto')
+var app = jalla('index.js')
+
+// include key.json hash as an asset
+app.pipeline.get('assets').push(function (state, emit) {
+  return function (cb) {
+    emit('progress', 'key.json')
+
+    fs.readFile('key.json', function (err, key) {
+      if (err) return emit('error', err)
+      var hash = crypto.createHmac('sha512', process.env.SALT)
+      hash.update(key)
+      emit('asset', 'key.json', hash.digest('buffer'))
+    })
+  }
+})
+
+app.listen(8080)
+```
+
+## Configuration
+The bundling is handled by tested and reliable tools which can be configured
+just as you are used to.
 
 ### JavaScript
 Scripts are compiled using [Browserify][browserify]. Custom transforms can be
@@ -46,7 +389,12 @@ added using the [`browserify.transform`][browserify-transform] field in your
 // package.json
 "browserify": {
   "transform": [
-    "some-browserify-transform"
+    ["aliasify", {
+      "aliases": {
+          "d3": "./shims/d3.js",
+          "underscore": "lodash"
+        }
+    }]
   ]
 }
 ```
@@ -60,8 +408,7 @@ added using the [`browserify.transform`][browserify-transform] field in your
 Lazily load parts of your codebase. Jalla will transform dynamic imports into
 calls to split-require automatically (using a
 [babel plugin][babel-dynamic-import]), meaning you only have to call
-`import('./some-file')` to get bundle splitting right out of the box without any
-tooling footprint in your source code.
+`import('./some-file')` to get bundle splitting right out of the box.
 
 ##### [babelify][babelify]
 Run [babel][babel] on your sourcecode. Will respect local `.babelrc` files for
@@ -85,16 +432,16 @@ Choo-specific optimization which transpiles html templates for increased browser
 performance.
 
 ##### [tinyify][tinyify] *(not used in watch mode)*
-A while suite of optimizations and minifications removing unused code,
+A wide suite of optimizations and minifications removing unused code,
 significantly reducing file size.
 
 </details>
 
 ### CSS
-CSS files are located and included automaticly. Whenever a JavaScript module is
-used in your application, jalla will try and find an adjacent `index.css` file
-in the same location. Jalla will also respect the `style` field in a modules
-`package.json` to determine which CSS file to include.
+CSS files are looked up and included automaticly. Whenever a JavaScript module
+is used in your application, jalla will try and find an adjacent `index.css`
+file in the same location. Jalla will also respect the `style` field in a
+modules `package.json` to determine which CSS file to include.
 
 All CSS files are transpiled using [PostCSS][PostCSS]. To add PostCSS plugins,
 either add a `postcss` field to your `package.json` or, if you need to
@@ -108,7 +455,7 @@ project. See [postcss-load-config][postcss-load-config] for details.
 // package.json
 "postcss": {
   "plugins": {
-    "some-postcss-plugin": {}
+    "postcss-custom-properties": {}
   }
 }
 ```
@@ -119,8 +466,8 @@ module.exports = config
 
 function config (ctx) {
   var plugins = []
-  if (ctx.env === 'production') {
-    plugins.push(require('some-postcss-plugin'))
+  if (ctx.env !== 'development') {
+    plugins.push(require('postcss-custom-properties'))
   }
   return { plugins }
 }
@@ -162,27 +509,22 @@ documentation). By default, jalla only applies HTML minification using
 // package.json
 "documentify": {
   "transform": [
-    [
-      "./my-document.js",
-      {
-        "order": "end"
-      }
-    ]
+    ["./my-transform.js"]
   ]
 }
 ```
 
 ```javascript
-// my-document.js
+// my-transform.js
 var hyperstream = require('hstream')
 
-module.exports = document
+module.exports = transform
 
-function document () {
+function transform () {
   return hyperstream({
     'html': {
       // add a class to the root html element
-      class: 'Root'
+      class: 'page-root'
     },
     'meta[name="viewport"]': {
       // instruct Mobile Safari to expand under the iPhone X notch
@@ -191,12 +533,12 @@ function document () {
     head: {
       // add some tracking script to the header
       _appendHtml: `
-        <script async src="https://www.tracking-service.com/tracker.js?id=abc123"></script>
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-XXXXXXXX-X"></script>
         <script>
           window.dataLayer = window.dataLayer || [];
-          function track () { dataLayer.push(arguments); }
-          track('js', new Date());
-          track('config', 'abc123');
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'UA-XXXXXXXX-X');
         </script>
       `
     }
@@ -205,353 +547,6 @@ function document () {
 ```
 
 </details>
-
-### Assets
-All files located in the root folder `./assets` are automatically being served
-under the webpage root.
-
-### CLI Options
-- __`--service-worker, --sw`__ entry point for a service worker, uses a subset
-of the optimization used for the entry file.
-- __`--css`__ explicitly include a css file in the build
-- __`--quiet, -q`__ disable printing to console
-- __`--build, -b`__ write assets to disc and exit
-- __`--serve, -s`__ serve built files from disk
-- __`--debug, -d`__ enable the node inspector, accepts a port as value
-- __`--base, -b`__ base path where app will be served
-- __`--port, -p`__ port to use for server
-
-### Service Workers
-By supplying the path to a service worker entry file with the `sw` option, jalla
-will build and serve it's bundle from that path.
-
-Registering a service worker with a Choo app is easily done using
-[choo-service-worker][choo-service-worker].
-
-```javascript
-app.use(require('choo-service-worker')('/sw.js'))
-```
-
-And then starting jalla with the `sw` option.
-
-```bash
-$ jalla index.js --sw sw.js
-```
-
-Information about application bundles and assets are exposed to the service
-worker during its build and can be accessed as environment variables.
-
-- __`process.env.ASSET_LIST`__ a list of URLs to all included assets
-
-
-<details>
-<summary>Example service worker</summary>
-
-```javascript
-// index.json
-var choo = require('choo')
-var app = choo()
-
-app.route('/', require('./views/home'))
-app.use(require('choo-service-worker')('/sw.js'))
-
-module.exports = app.mount('body')
-```
-
-```javascript
-// sw.js
-// use package.json version field as cache key
-var CACHE_KEY = process.env.npm_package_version
-var FILES = [
-  '/',
-  '/manifest.json'
-].concat(process.env.ASSET_LIST)
-
-self.addEventListener('install', function oninstall (event) {
-  // cache landing page and all assets once service worker is installed
-  event.waitUntil(
-    caches
-      .open(CACHE_KEY)
-      .then((cache) => cache.addAll(FILES))
-      .then(() => self.skipWaiting())
-  )
-})
-
-self.addEventListener('activate', function onactivate (event) {
-  // clear old caches on activate
-  event.waitUntil(clear().then(() => self.clients.claim()))
-})
-
-self.addEventListener('fetch', function onfetch (event) {
-  event.respondWith(
-    caches.open(CACHE_KEY).then(function (cache) {
-      return cache.match(req).then(function (cached) {
-        if (req.cache === 'only-if-cached' && req.mode !== 'same-origin') {
-          return cached
-        }
-
-        // try and fetch response and fallback to cache
-        return self.fetch(event.request).then(function (response) {
-          if (!response.ok) {
-            if (fallback) return fallback
-            else return response
-          }
-          cache.put(req, response.clone())
-          return response
-        }, function (err) {
-          if (fallback) return fallback
-          return err
-        })
-      })
-    })
-  )
-})
-
-// clear application cache
-// () -> Promise
-function clear () {
-  return caches.keys().then(function (keys) {
-    var caches = keys.filter((key) => key !== CACHE_KEY)
-    return Promise.all(keys.map((key) => caches.delete(key)))
-  })
-}
-```
-
-</details>
-
-### Manifest
-A bare-bones application manifest is generated based on the projects
-`package.json`. You could either place a `manifest.json` in the assets folder or
-you can generate one using a custom middleware.
-
-## API
-After instantiating the jalla server, middleware can be added just like you'd do
-with any [Koa][koa] app. The application is an instance of Koa and supports
-[all Koa middleware][koa-middleware].
-
-Jalla will await all middleware to finish before trying to render a HTML response.
-If the response has been redirected (i.e. calling `ctx.redirect`) or if a value
-has been assigned to `ctx.body` jalla will not render any HTML response.
-
-```javascript
-var mount = require('koa-mount')
-var jalla = require('jalla')
-var app = jalla('index.js')
-
-// only allow robots in production
-app.use(mount('/robots.txt', function (ctx, next) {
-  ctx.type = 'text/plain'
-  ctx.body = `
-    User-agent: *
-    Disallow: ${process.env.NODE_ENV === 'production' ? '' : '/'}
-  `
-}))
-
-app.listen(8080)
-```
-
-### API Options
-Options can be supplied as the second argument (`jalla('index.js', opts)`).
-
-- __`sw`__ entry point for a service worker
-- __`css`__ explicitly include a css file in the build
-- __`quiet`__ disable printing to console
-- __`base`__ base path where app will be served
-- __`serve`__ serve built files from disk (path or bool)
-
-### SSR (Server side render)
-When rendering HTML, jalla will make two render passes; once to allow your views
-to fetch the content it needs and once again to generate the resulting HTML. On
-the application state there will be an `prefetch` property which is an array for
-you to push promises into. Once all promises are resolved, the second render
-will commence.
-
-<details>
-<summary>Example using state.prefetch</summary>
-
-```javascript
-var fetch = require('node-fetch')
-var html = require('choo/html')
-var choo = require('choo')
-var app = choo()
-
-app.route('/', main)
-app.use(store)
-
-module.exports = app.mount('body')
-
-function main (state, emit) {
-  if (!state.name) {
-    emit('fetch')
-    return html`<body>Loading…</body>`
-  }
-
-  return html`
-    <body>
-      <h1>Hello ${state.name}!</h1>
-    </body>
-  `
-}
-
-function store (state, emitter) {
-  state.name = state.name || null
-
-  emitter.on('fetch', function () {
-    var promise = fetch('https://some-api.com')
-      .then((res) => res.text())
-      .then(function (name) {
-        state.name = name
-        emitter.emit('render')
-      })
-
-    if (state.prefetch) {
-      // ask jalla to wait for this promise before rendering the resulting HTML
-      state.prefetch.push(promise)
-    }
-  })
-}
-```
-
-</details>
-
-#### Caching HTML
-Jalla will render HTML for every request, which is excellent for dynamic content
-but might not be what you need for all your views and endpoints. You will
-probably want to add custom caching middleware or an external caching layer
-ontop of your server for optimal performance.
-
-##### Setting up Cloudflare caching with jalla
-Cloudflares free tier is an excellent complement to jalla for caching HTML
-responses. You'll need to setup Cloudflare to
-[cache everything][cloudflare-cache-guide] and to respect existing cache
-headers. This means you'll be able to tell Cloudflare which responses to cache
-and for how long by setting the `s-maxage` header.
-
-However, when publishing a new version of your webpage or when the cache should
-be invalidated due to some external service update, you'll need to purge the
-Cloudflare cache. For that purpose, there's [cccpurge][cccpurge].
-
-<details>
-<summary>Example purging cache on server startup</summary>
-
-```javascript
-var purge = require('cccpurge')
-var jalla = require('jalla')
-var app = jalla('index.js')
-
-app.use(function (ctx, next) {
-  if (ctx.accepts('html')) {
-    // cache all html responses on Cloudflare for a week
-    ctx.set('Cache-Control', `s-maxage=${60 * 60 * 24 * 7}, max-age=0`)
-  }
-  return next()
-})
-
-if (app.env === 'production') {
-  // purge cache before starting production server
-  cccpurge(require('./index'), {
-    root: 'https://www.my-blog.com',
-    email: 'foo@my-blog.com',
-    zone: '<CLOUDFLARE_ZONE_ID>',
-    key: '<CLOUDFLARE_API_KEY>'
-  }, function (err) {
-    if (err) process.exit(1)
-    app.listen(8080)
-  })
-} else {
-  app.listen(8080)
-}
-```
-
-</details>
-
-### `ctx.state`
-Whatever is stored in the state object after all middleware has run will be used
-as state when rendering the HTML response. The resulting application state will
-be exposed to the client as `window.initialState` and will be automatically
-picked up by Choo. Using `ctx.state` is how you bootstrap your client with
-server generated content.
-
-Meta data for the page being rendered can be added to `ctx.state.meta`. A
-`<meta>` tag will be added to the header for every property therein.
-
-<details>
-<summary>Example decorating ctx.state</summary>
-
-```javascript
-var geoip = require('geoip-lite')
-
-app.use(function (ctx, next) {
-  if (ctx.accepts('html')) {
-    // add meta data
-    ctx.state.meta = { 'og:url': 'https://webpage.com' + ctx.url }
-
-    // expose user location on state
-    ctx.state.location = geoip.lookup(ctx.ip)
-  }
-  return next()
-})
-```
-
-</details>
-
-### `ctx.assets`
-Compiled assets (scripts and styles) are exposed on the koa `ctx` object as an
-object with the properties `file`, `map`, `buffer` and `url`.
-
-<details>
-<summary>Example adding Link headers for all JS assets</summary>
-
-```javascript
-app.use(function (ctx, next) {
-  if (!ctx.accepts('html')) return next()
-
-  // find all javascript assets
-  var bundles = Object.values(ctx.assets)
-    .filter((asset) => /\.js$/.test(asset.url))
-    .map((asset) => `<${asset.url}>; rel=preload; as=script`)
-
-  // HTTP/2 push all bundles
-  ctx.append('Link', bundles)
-
-  return next()
-})
-```
-
-</details>
-
-### Events
-Most of the internal workings are exposed as events on the application (Koa)
-instance.
-
-#### `app.on('error', callback(err))`
-When an internal error occurs or a route could not be served. If an HTTP error
-was encountered, the status code is available on the error object.
-
-#### `app.on('warning', callback(warning))`
-When a non-critical error was encountered, e.g. a postcss plugin failed to parse
-a rule.
-
-#### `app.on('update', callback(file))`
-When a file has been changed.
-
-#### `app.on('progress', callback(file, uri))`
-When an entry file is being bundled.
-
-#### `app.on('bundle:script', callback(file, uri, buff)`
-When a script file finishes bundling.
-
-#### `app.on('bundle:style', callback(file, uri, buff)`
-When a css file finishes bundling.
-
-#### `app.on('bundle:file', callback(file))`
-When a file is being included in a bundle.
-
-#### `app.on('timing', callback(time, ctx))`
-When a HTTP response has been sent.
-
-#### `app.on('start', callback(port))`
-When the server has started and in listening.
 
 [choo]: https://github.com/choojs/choo
 [bankai]: https://github.com/choojs/bankai
@@ -587,6 +582,6 @@ When the server has started and in listening.
 [npm-link]: https://npmjs.org/package/jalla
 [travis-badge]: https://img.shields.io/travis/jallajs/jalla/master.svg?style=flat-square
 [travis-link]: https://travis-ci.org/jallajs/jalla
-[downloads-badge]: http://img.shields.io/npm/dm/jalla.svg?style=flat-square
+[downloads-badge]: https://img.shields.io/npm/dm/jalla.svg?style=flat-square
 [standard-badge]: https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square
 [standard-link]: https://github.com/feross/standard
