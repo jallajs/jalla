@@ -13,8 +13,7 @@ you need to render views dynamically, set custom headers or integrate an API.
 
 In short, Jalla is a [Koa][koa] server, a [Browserify][browserify] bundler
 for scripts and a [PostCSS][postcss] processor for styles. Documents are
-compiled using [Documentify][documentify]. And it's all configurable as your're
-used to.
+compiled using [Documentify][documentify]. And it's all configured for you.
 
 - [Usage](#usage)
 - [Options](#options)
@@ -24,6 +23,8 @@ used to.
 - [Server Side Rendering](#server-side-rendering)
   - [Custom HTML](#custom-html)
   - [Prefetching data](#prefetching-data)
+  - [`ctx.state`](#ctxstate)
+  - [`ctx.assets`](#ctxassets)
 - [Assets](#assets)
 - [Manifest](#manifest)
 - [Service Workers](#service-workers)
