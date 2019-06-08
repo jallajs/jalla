@@ -113,10 +113,14 @@ app.listen(8080)
 ## Server Side Rendering
 For every request that comes in (which accepts HTML and is not an asset), unless
 handeled by custom middleware, jalla will try and render an HTML response. Jalla
-will await all custom  middleware to finish before trying to render a HTML
+will await all custom middleware to finish before trying to render a HTML
 response. If the response has been redirected (i.e. calling `ctx.redirect`) or
 if a value has been assigned to `ctx.body` jalla will not render any HTML
 response.
+
+During server side rendering a `status` code can be added to the state which
+will be used for the HTTP response. This is usefull to set proper `404` or error
+codes.
 
 ```javascript
 var mount = require('koa-mount')
@@ -181,6 +185,9 @@ module.exports = function (state, emitter) {
 }
 ```
 
+Apart from `prefetch`, jalla also exposes the HTTP `req` and `res` objects.
+They can be usefull to read cookies or set headers. Writing to the response
+stream, however, is not recommended.
 
 ### `ctx.state`
 The data stored in the state object after all middleware has run will be used
