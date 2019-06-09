@@ -30,6 +30,9 @@
     "parser": "babel-eslint"
   },
   "homepage": "https://github.com/jallajs/jalla#readme",
+  "peerDependencies": {
+    "choo": "7.x"
+  },
   "devDependencies": {
     "babel-eslint": "^10.0.1",
     "dependency-check": "^3.1.0",
