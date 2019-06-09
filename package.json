@@ -75,7 +75,7 @@
     "postcss-import": "^11.1.0",
     "postcss-load-config": "^1.2.0",
     "postcss-url": "^7.3.2",
-    "postcss-watcher": "^1.0.5",
+    "postcss-watcher": "^2.0.0",
     "posthtml-minifier": "^0.1.0",
     "posthtmlify": "^0.1.0",
     "read-pkg-up": "^3.0.0",
