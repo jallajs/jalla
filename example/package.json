@@ -11,8 +11,8 @@
   "author": "code and conspire",
   "license": "MIT",
   "dependencies": {
-    "choo": "^6.13.1",
+    "choo": "^7.0.0-0",
     "choo-lazy-view": "^1.0.0",
-    "choo-service-worker": "^2.4.0"
+    "choo-service-worker": "^3.0.0"
   }
 }
