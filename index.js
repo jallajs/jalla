@@ -1,4 +1,3 @@
-var util = require('util')
 var path = require('path')
 var assert = require('assert')
 var serve = require('koa-static')
@@ -42,12 +41,13 @@ function start (entry, opts = {}) {
         ? app.env === 'development'
         : opts.watch
     }, opts)
-    let bundle = util.promisify(app.pipeline.bundle.bind(app.pipeline))
-    let init = bundle(entry, state)
+    let init = new Promise(function (resolve, reject) {
+      app.pipeline.bundle(entry, state, resolve)
+    })
 
     app.use(compose([
       // defer response until initial bundle finishes
-      (ctx, next) => init.then(() => next()),
+      (ctx, next) => init.then(next),
       // serve bundeled assets
       app.pipeline.middleware(),
       // apply cache control
