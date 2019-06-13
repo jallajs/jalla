@@ -15,25 +15,35 @@ In short, Jalla is a [Koa][koa] server, a [Browserify][browserify] bundler
 for scripts and a [PostCSS][postcss] processor for styles. Documents are
 compiled using [Documentify][documentify]. And it's all configured for you.
 
-- [Usage](#usage)
-- [Options](#options)
-- [Build](#build)
-- [Serve](#serve)
-- [API](#api)
-- [Server Side Rendering](#server-side-rendering)
-  - [Custom HTML](#custom-html)
-  - [Prefetching data](#prefetching-data)
-  - [`ctx.state`](#ctxstate)
-  - [`ctx.assets`](#ctxassets)
-- [Assets](#assets)
-- [Manifest](#manifest)
-- [Service Workers](#service-workers)
-- [Advanced Usage](#advanced-usage)
-- [Configuration](#configuration)
-  - [Scripts](#scripts)
-  - [Styles](#styles)
-  - [HTML](#html)
-- [License](#license)
+- [jalla](#jalla)
+  - [Usage](#usage)
+  - [Options](#options)
+  - [Build](#build)
+  - [Serve](#serve)
+  - [API](#api)
+  - [Server Side Rendering](#server-side-rendering)
+    - [Custom HTML](#custom-html)
+    - [Prefetching data](#prefetching-data)
+    - [`ctx.state`](#ctxstate)
+    - [`ctx.assets`](#ctxassets)
+  - [Assets](#assets)
+  - [Manifest](#manifest)
+    - [Service Workers](#service-workers)
+  - [Advanced Usage](#advanced-usage)
+  - [Configuration](#configuration)
+    - [JavaScript](#javascript)
+        - [[split-require][split-require]](#split-requiresplit-require)
+        - [[babelify][babelify]](#babelifybabelify)
+        - [[brfs][brfs]](#brfsbrfs)
+        - [[envify][envify]](#envifyenvify)
+        - [[nanohtml][nanohtml] *(not used in watch mode)*](#nanohtmlnanohtml-not-used-in-watch-mode)
+        - [[tinyify][tinyify] *(not used in watch mode)*](#tinyifytinyify-not-used-in-watch-mode)
+    - [CSS](#css)
+        - [[postcss-url][postcss-url]](#postcss-urlpostcss-url)
+        - [[postcss-import][postcss-import]](#postcss-importpostcss-import)
+        - [[autoprefixer][autoprefixer] *(not used in watch mode)*](#autoprefixerautoprefixer-not-used-in-watch-mode)
+        - [[postcss-csso][postcss-csso] *(not used in watch mode)*](#postcss-cssopostcss-csso-not-used-in-watch-mode)
+    - [HTML](#html)
 
 ## Usage
 Jalla performs a series of optimizations when compiling your code. By default
@@ -361,19 +371,16 @@ to the assets and dependencies of all prior steps.
 ```javascript
 var fs = require('fs')
 var jalla = require('jalla')
-var crypto = require('crypto')
 var app = jalla('index.js')
 
-// include key.json hash as an asset
+// include data.csv as an asset
 app.pipeline.get('assets').push(function (state, emit) {
   return function (cb) {
-    emit('progress', 'key.json')
+    emit('progress', 'data.csv')
 
-    fs.readFile('key.json', function (err, key) {
+    fs.readFile('data.csv', function (err, buffer) {
       if (err) return emit('error', err)
-      var hash = crypto.createHmac('sha512', process.env.SALT)
-      hash.update(key)
-      emit('asset', 'key.json', hash.digest('buffer'))
+      emit('asset', 'data.json', buffer)
     })
   }
 })
