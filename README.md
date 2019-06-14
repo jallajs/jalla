@@ -379,8 +379,9 @@ app.pipeline.get('assets').push(function (state, emit) {
     emit('progress', 'data.csv')
 
     fs.readFile('data.csv', function (err, buffer) {
-      if (err) return emit('error', err)
+      if (err) return cb(err)
       emit('asset', 'data.json', buffer)
+      cb()
     })
   }
 })
