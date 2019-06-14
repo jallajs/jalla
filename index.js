@@ -1,7 +1,6 @@
 var path = require('path')
 var assert = require('assert')
 var serve = require('koa-static')
-var compose = require('koa-compose')
 var App = require('./lib/app')
 var render = require('./lib/render')
 
@@ -45,22 +44,21 @@ function start (entry, opts = {}) {
       app.pipeline.bundle(entry, state, resolve)
     })
 
-    app.use(compose([
+    if (state.env !== 'development') {
       // defer response until initial bundle finishes
-      (ctx, next) => init.then(next),
-      // serve bundeled assets
-      app.pipeline.middleware(),
-      // apply cache control
-      function (ctx, next) {
-        if (ctx.body) {
-          let cache = this.env !== 'development' && !opts.watch
-          let maxAge = cache ? 60 * 60 * 24 * 365 : 0
-          let value = `${cache ? 'public, ' : ''}max-age=${maxAge}`
-          ctx.set('Cache-Control', value)
-        }
-        return next()
+      app.use((ctx, next) => init.then(next))
+    }
+
+    app.use(app.pipeline.middleware())
+    app.use(function (ctx, next) {
+      if (ctx.body) {
+        let cache = state.env !== 'development' && !state.watch
+        let maxAge = cache ? 60 * 60 * 24 * 365 : 0
+        let value = `${cache ? 'public, ' : ''}max-age=${maxAge}`
+        ctx.set('Cache-Control', value)
       }
-    ]))
+      return next()
+    })
   }
 
   app.use(require('koa-conditional-get')())
