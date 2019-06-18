@@ -44,11 +44,7 @@ function start (entry, opts = {}) {
       app.pipeline.bundle(entry, state, resolve)
     })
 
-    if (state.env !== 'development') {
-      // defer response until initial bundle finishes
-      app.use((ctx, next) => init.then(next))
-    }
-
+    app.use((ctx, next) => init.then(next))
     app.use(app.pipeline.middleware())
     app.use(function (ctx, next) {
       if (ctx.body) {
