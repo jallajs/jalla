@@ -34,12 +34,10 @@ function start (entry, opts = {}) {
     app.use(serve(pub, { setHeaders }))
   } else {
     let state = Object.assign({
-      env: app.env,
-      base: opts.base || '',
       watch: typeof opts.watch === 'undefined'
         ? app.env === 'development'
         : opts.watch
-    }, opts)
+    }, app.state)
     let init = new Promise(function (resolve, reject) {
       app.pipeline.bundle(entry, state, resolve)
     })
