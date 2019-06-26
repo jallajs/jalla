@@ -97,8 +97,10 @@ if (command === 'build') {
   opts.watch = false
   let app = new App(path.resolve(process.cwd(), entry), opts)
   let dir = typeof argv.dir === 'string' ? argv.dir : 'dist'
-  app.build(path.resolve(process.cwd(), dir), function (err) {
-    process.exit(err ? 1 : 0)
+  app.build(path.resolve(process.cwd(), dir)).then(function () {
+    process.exit(0)
+  }, function () {
+    process.exit(1)
   })
 } else {
   let app = jalla(path.resolve(process.cwd(), entry), opts)
