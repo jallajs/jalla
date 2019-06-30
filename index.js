@@ -65,7 +65,7 @@ function start (entry, opts = {}) {
 // set static asset headers
 // (obj, str, obj) -> void
 function setHeaders (res, path, stats) {
-  res.setHeader('Cache-Control', `public, maxage=${60 * 60 * 24 * 365}`)
+  res.setHeader('Cache-Control', `public, max-age=${60 * 60 * 24 * 365}`)
 }
 
 // resolve file path (relative to dir) to absolute path
