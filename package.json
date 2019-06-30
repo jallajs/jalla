@@ -51,7 +51,7 @@
     "chalk": "^2.4.1",
     "chokidar": "^3.0.1",
     "clear-module": "^3.0.0",
-    "common-shakeify": "^0.6.0",
+    "common-shakeify": "0.6.0",
     "concat-stream": "^1.6.2",
     "convert-source-map": "^1.6.0",
     "dedent": "^0.7.0",
