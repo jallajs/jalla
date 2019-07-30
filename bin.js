@@ -16,14 +16,14 @@ var COMMANDS = ['start', 'build', 'serve']
 var argv = minimist(process.argv.slice(2), {
   alias: {
     'service-worker': 'sw',
-    'dir': 'd',
-    'quiet': 'q',
-    'inspect': 'i',
-    'base': 'b',
-    'watch': 'w',
-    'port': 'p',
-    'help': 'h',
-    'version': 'v'
+    dir: 'd',
+    quiet: 'q',
+    inspect: 'i',
+    base: 'b',
+    watch: 'w',
+    port: 'p',
+    help: 'h',
+    version: 'v'
   },
   default: {
     port: process.env.PORT || 8080
@@ -95,15 +95,15 @@ if (typeof argv.watch !== 'undefined') opts.watch = Boolean(argv.watch)
 
 if (command === 'build') {
   opts.watch = false
-  let app = new App(path.resolve(process.cwd(), entry), opts)
-  let dir = typeof argv.dir === 'string' ? argv.dir : 'dist'
+  const app = new App(path.resolve(process.cwd(), entry), opts)
+  const dir = typeof argv.dir === 'string' ? argv.dir : 'dist'
   app.build(path.resolve(process.cwd(), dir)).then(function () {
     process.exit(0)
   }, function () {
     process.exit(1)
   })
 } else {
-  let app = jalla(path.resolve(process.cwd(), entry), opts)
+  const app = jalla(path.resolve(process.cwd(), entry), opts)
   getPort({ port: argv.port }).then(function (port) {
     app.listen(port)
   })

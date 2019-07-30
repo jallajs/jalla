@@ -30,15 +30,15 @@ function start (entry, opts = {}) {
   })
 
   if (opts.serve) {
-    let pub = path.resolve(opts.dist, 'public')
+    const pub = path.resolve(opts.dist, 'public')
     app.use(serve(pub, { setHeaders }))
   } else {
-    let state = Object.assign({
+    const state = Object.assign({
       watch: typeof opts.watch === 'undefined'
         ? app.env === 'development'
         : opts.watch
     }, app.state)
-    let init = new Promise(function (resolve, reject) {
+    const init = new Promise(function (resolve, reject) {
       app.pipeline.bundle(entry, state, resolve)
     })
 
@@ -46,9 +46,9 @@ function start (entry, opts = {}) {
     app.use(app.pipeline.middleware())
     app.use(function (ctx, next) {
       if (ctx.body) {
-        let cache = state.env !== 'development' && !state.watch
-        let maxAge = cache ? 60 * 60 * 24 * 365 : 0
-        let value = `${cache ? 'public, ' : ''}max-age=${maxAge}`
+        const cache = state.env !== 'development' && !state.watch
+        const maxAge = cache ? 60 * 60 * 24 * 365 : 0
+        const value = `${cache ? 'public, ' : ''}max-age=${maxAge}`
         ctx.set('Cache-Control', value)
       }
       return next()
