@@ -315,7 +315,13 @@ self.addEventListener('install', function oninstall (event) {
 
 self.addEventListener('activate', function onactivate (event) {
   // clear old caches on activate
-  event.waitUntil(clear().then(() => self.clients.claim()))
+  event.waitUntil(clear().then(function () {
+    if (!self.registration.navigationPreload) return self.clients.claim()
+    // enable navigation preload
+    return self.registration.navigationPreload.enable().then(function () {
+      return self.clients.claim()
+    })
+  }))
 })
 
 self.addEventListener('fetch', function onfetch (event) {
@@ -323,14 +329,14 @@ self.addEventListener('fetch', function onfetch (event) {
   event.respondWith(caches.open(CACHE_KEY).then(async function (cache) {
     try {
       var cached = await cache.match(req)
-      var response = self.fetch(event.request)
-      if (req.method.toUpperCase() === 'GET') {
+      var response = await (event.preloadResponse || self.fetch(event.request))
+      if (response.ok && req.method.toUpperCase() === 'GET') {
         await cache.put(req, response.clone())
       }
       return response
     } catch (err) {
       if (cached) return cached
-      throw err
+      return err
     }
   }))
 })
