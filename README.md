@@ -178,11 +178,13 @@ before issuing another render pass using the state generated the first time.
 
 ```javascript
 // store.js
+var fetch = require('node-fetch')
+
 module.exports = function (state, emitter) {
   state.data = state.data || null
 
   emitter.on('fetch', function () {
-    var request = window.fetch('/my/api')
+    var request = fetch('/my/api')
       .then((res) => res.json())
       .then(function (data) {
         state.data = data
