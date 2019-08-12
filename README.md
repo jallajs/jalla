@@ -28,7 +28,7 @@ compiled using [Documentify][documentify]. And it's all configured for you.
     - [`ctx.assets`](#ctxassets)
   - [Assets](#assets)
   - [Manifest](#manifest)
-    - [Service Workers](#service-workers)
+  - [Service Workers](#service-workers)
   - [Advanced Usage](#advanced-usage)
   - [Configuration](#configuration)
     - [JavaScript](#javascript)
@@ -260,7 +260,7 @@ A bare-bones application manifest is generated based on the projects
 `package.json`. You can either place a custom `manifest.json` in the
 [assets](#assets) folder or you can generate one using a custom middleware.
 
-### Service Workers
+## Service Workers
 By supplying the path to a service worker entry file with the `sw` option, jalla
 will build and serve it's bundle from that path.
 
