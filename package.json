@@ -44,7 +44,7 @@
     "autoprefixer": "^8.0.0",
     "babel-plugin-dynamic-import-split-require": "^2.0.0",
     "babelify": "^10.0.0",
-    "brfs": "^1.6.1",
+    "brfs": "^2.0.2",
     "browserify": "^16.3.0",
     "browserslist": "^4.6.3",
     "caniuse-api": "^3.0.0",
@@ -92,7 +92,7 @@
     "through2": "^3.0.1",
     "tinyify": "^2.5.1",
     "transform-ast": "^2.4.4",
-    "uglifyify": "^5.0.1",
+    "uglifyify": "^5.0.2",
     "unassertify": "^2.1.1",
     "watchify": "^3.11.1"
   }
