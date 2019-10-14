@@ -117,7 +117,7 @@ var app = jalla('index.js', {
   serve: process.env.NODE_ENV === 'production'
 })
 
-app.listen(8080)
+app.start(8080)
 ```
 
 ## Server Side Rendering
@@ -146,7 +146,7 @@ app.use(mount('/robots.txt', function (ctx, next) {
   `
 }))
 
-app.listen(8080)
+app.start(8080)
 ```
 
 ### Custom HTML
@@ -377,24 +377,32 @@ is compiling the app. The pipline steps are called in series, and have access
 to the assets and dependencies of all prior steps.
 
 ```javascript
-var fs = require('fs')
+var path = require('path')
 var jalla = require('jalla')
+var csv = require('csvtojson')
 var app = jalla('index.js')
 
-// include data.csv as an asset
+// convert and include data.csv as a JSON file
 app.pipeline.get('assets').push(function (state, emit) {
-  return function (cb) {
-    emit('progress', 'data.csv')
-
-    fs.readFile('data.csv', function (err, buffer) {
-      if (err) return cb(err)
-      emit('asset', 'data.json', buffer)
-      cb()
+  return async function (cb) {
+    if (state.assets.has('data.json')) return cb()
+    emit('progress', 'data.json')
+    var json = await csv.fromFile(path.resolve(state.entry, 'data.csv'))
+    emit('asset', 'data.json', Buffer.from(JSON.stringify(json)), {
+      mime: 'application/json
     })
+    cb()
   }
 })
 
-app.listen(8080)
+if (process.env.BUILD) {
+  app.build(path.resolve(__dirname, 'dist'), function (err) {
+    if (err) console.error(err)
+    process.exit(err ? 1 : 0)
+  })
+} else {
+  app.start(8080)
+}
 ```
 
 ## Configuration

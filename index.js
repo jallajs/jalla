@@ -29,35 +29,15 @@ function start (entry, opts = {}) {
     app.emit('timing', Date.now() - start, ctx)
   })
 
-  if (opts.serve) {
-    const pub = path.resolve(opts.dist, 'public')
-    app.use(serve(pub, { setHeaders }))
-  } else {
-    const state = Object.assign({
-      watch: typeof opts.watch === 'undefined'
-        ? app.env === 'development'
-        : opts.watch
-    }, app.state)
-    const init = new Promise(function (resolve, reject) {
-      app.pipeline.bundle(entry, state, resolve)
-    })
-
-    app.use((ctx, next) => init.then(next))
-    app.use(app.pipeline.middleware())
-    app.use(function (ctx, next) {
-      if (ctx.body) {
-        const cache = state.env !== 'development' && !state.watch
-        const maxAge = cache ? 60 * 60 * 24 * 365 : 0
-        const value = `${cache ? 'public, ' : ''}max-age=${maxAge}`
-        ctx.set('Cache-Control', value)
-      }
-      return next()
-    })
-  }
-
   app.use(require('koa-conditional-get')())
   app.use(require('koa-etag')())
   app.use(render(app))
+
+  if (opts.serve) {
+    app.use(serve(path.resolve(opts.dist, 'public'), { setHeaders }))
+  } else {
+    app.use(app.pipeline.middleware(app.state))
+  }
 
   return app
 }

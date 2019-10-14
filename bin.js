@@ -8,7 +8,6 @@ var assert = require('assert')
 var dedent = require('dedent')
 var getPort = require('get-port')
 var minimist = require('minimist')
-var App = require('./lib/app')
 var jalla = require('./index')
 
 var COMMANDS = ['start', 'build', 'serve']
@@ -95,7 +94,7 @@ if (typeof argv.watch !== 'undefined') opts.watch = Boolean(argv.watch)
 
 if (command === 'build') {
   opts.watch = false
-  const app = new App(path.resolve(process.cwd(), entry), opts)
+  const app = jalla(path.resolve(process.cwd(), entry), opts)
   const dir = typeof argv.dir === 'string' ? argv.dir : 'dist'
   app.build(path.resolve(process.cwd(), dir)).then(function () {
     process.exit(0)
