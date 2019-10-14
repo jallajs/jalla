@@ -61,6 +61,7 @@
     "exorcist": "^1.0.1",
     "get-port": "^3.2.0",
     "hstream": "^1.2.0",
+    "is-interactive": "^1.0.0",
     "jsesc": "^2.5.2",
     "koa": "^2.7.0",
     "koa-conditional-get": "^2.0.0",
