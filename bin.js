@@ -104,6 +104,6 @@ if (command === 'build') {
 } else {
   const app = jalla(path.resolve(process.cwd(), entry), opts)
   getPort({ port: argv.port || 8080 }).then(function (port) {
-    app.start(port)
+    app.listen(port)
   })
 }

@@ -117,7 +117,7 @@ var app = jalla('index.js', {
   serve: process.env.NODE_ENV === 'production'
 })
 
-app.start(8080)
+app.listen(8080)
 ```
 
 ## Server Side Rendering
@@ -146,7 +146,7 @@ app.use(mount('/robots.txt', function (ctx, next) {
   `
 }))
 
-app.start(8080)
+app.listen(8080)
 ```
 
 ### Custom HTML
@@ -401,7 +401,7 @@ if (process.env.BUILD) {
     process.exit(err ? 1 : 0)
   })
 } else {
-  app.start(8080)
+  app.listen(8080)
 }
 ```
 
