@@ -18,6 +18,7 @@ var argv = minimist(process.argv.slice(2), {
     dir: 'd',
     quiet: 'q',
     inspect: 'i',
+    skip: 's',
     base: 'b',
     watch: 'w',
     port: 'p',
@@ -48,6 +49,7 @@ if (argv.help) {
       --css                   entry point for CSS
       --service-worker, --sw  entry point for service worker
       --base, -b              base path where app will be mounted
+      --skip, -s              skip transform for file/glob (excluding optimizations)
       --watch, -w             enable watch mode (default in development)
       --dir, -d               output directory, use with ${chalk.bold('build')} and ${chalk.bold('serve')}
       --quiet, -q             disable printing to console

@@ -70,6 +70,7 @@ $ NODE_ENV=production jalla index.js
 - __`--css`__ explicitly include a css file in the build
 - __`--service-worker, --sw`__ entry point for a service worker
 - __`--base, -b`__ base path where app will be served
+- __`--skip, -s`__ skip transform for file/glob (excluding optimizations)
 - __`--watch, -w`__ watch files for changes (default in `development`)
 - __`--dir, -d`__ output directory, use with [build](#build) and [serve](#serve)
 - __`--quiet, -q`__ disable printing to console
