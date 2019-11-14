@@ -93,7 +93,7 @@
     "split-require": "^3.1.2",
     "tfilter": "^1.0.1",
     "through2": "^3.0.1",
-    "tinyify": "^2.5.1",
+    "tinyify": "^2.5.2",
     "transform-ast": "^2.4.4",
     "uglifyify": "^5.0.2",
     "unassertify": "^2.1.1",
