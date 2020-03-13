@@ -65,7 +65,7 @@ function normalizeSkip (val) {
       return str.includes(val) || minimatch.match(str)
     }
   } else {
-    throw new Error('Skip should be either a RegExp, function or string')
+    throw new Error('jalla: skip should be either RegExp, function or string')
   }
 }
 
