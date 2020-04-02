@@ -8,7 +8,6 @@ var assert = require('assert')
 var dedent = require('dedent')
 var getPort = require('get-port')
 var minimist = require('minimist')
-var App = require('./lib/app')
 var jalla = require('./index')
 
 var COMMANDS = ['start', 'build', 'serve']
@@ -16,14 +15,15 @@ var COMMANDS = ['start', 'build', 'serve']
 var argv = minimist(process.argv.slice(2), {
   alias: {
     'service-worker': 'sw',
-    'dir': 'd',
-    'quiet': 'q',
-    'inspect': 'i',
-    'base': 'b',
-    'watch': 'w',
-    'port': 'p',
-    'help': 'h',
-    'version': 'v'
+    dir: 'd',
+    quiet: 'q',
+    inspect: 'i',
+    skip: 's',
+    base: 'b',
+    watch: 'w',
+    port: 'p',
+    help: 'h',
+    version: 'v'
   },
   default: {
     port: process.env.PORT || 8080
@@ -49,6 +49,7 @@ if (argv.help) {
       --css                   entry point for CSS
       --service-worker, --sw  entry point for service worker
       --base, -b              base path where app will be mounted
+      --skip, -s              skip transform for file/glob (excluding optimizations)
       --watch, -w             enable watch mode (default in development)
       --dir, -d               output directory, use with ${chalk.bold('build')} and ${chalk.bold('serve')}
       --quiet, -q             disable printing to console
@@ -95,16 +96,16 @@ if (typeof argv.watch !== 'undefined') opts.watch = Boolean(argv.watch)
 
 if (command === 'build') {
   opts.watch = false
-  let app = new App(path.resolve(process.cwd(), entry), opts)
-  let dir = typeof argv.dir === 'string' ? argv.dir : 'dist'
+  const app = jalla(path.resolve(process.cwd(), entry), opts)
+  const dir = typeof argv.dir === 'string' ? argv.dir : 'dist'
   app.build(path.resolve(process.cwd(), dir)).then(function () {
     process.exit(0)
   }, function () {
     process.exit(1)
   })
 } else {
-  let app = jalla(path.resolve(process.cwd(), entry), opts)
-  getPort({ port: argv.port }).then(function (port) {
+  const app = jalla(path.resolve(process.cwd(), entry), opts)
+  getPort({ port: argv.port || 8080 }).then(function (port) {
     app.listen(port)
   })
 }

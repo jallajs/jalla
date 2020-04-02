@@ -28,7 +28,7 @@ compiled using [Documentify][documentify]. And it's all configured for you.
     - [`ctx.assets`](#ctxassets)
   - [Assets](#assets)
   - [Manifest](#manifest)
-    - [Service Workers](#service-workers)
+  - [Service Workers](#service-workers)
   - [Advanced Usage](#advanced-usage)
   - [Configuration](#configuration)
     - [JavaScript](#javascript)
@@ -70,6 +70,7 @@ $ NODE_ENV=production jalla index.js
 - __`--css`__ explicitly include a css file in the build
 - __`--service-worker, --sw`__ entry point for a service worker
 - __`--base, -b`__ base path where app will be served
+- __`--skip, -s`__ skip transform for file/glob (excluding optimizations)
 - __`--watch, -w`__ watch files for changes (default in `development`)
 - __`--dir, -d`__ output directory, use with [build](#build) and [serve](#serve)
 - __`--quiet, -q`__ disable printing to console
@@ -178,11 +179,13 @@ before issuing another render pass using the state generated the first time.
 
 ```javascript
 // store.js
+var fetch = require('node-fetch')
+
 module.exports = function (state, emitter) {
   state.data = state.data || null
 
   emitter.on('fetch', function () {
-    var request = window.fetch('/my/api')
+    var request = fetch('/my/api')
       .then((res) => res.json())
       .then(function (data) {
         state.data = data
@@ -258,7 +261,7 @@ A bare-bones application manifest is generated based on the projects
 `package.json`. You can either place a custom `manifest.json` in the
 [assets](#assets) folder or you can generate one using a custom middleware.
 
-### Service Workers
+## Service Workers
 By supplying the path to a service worker entry file with the `sw` option, jalla
 will build and serve it's bundle from that path.
 
@@ -313,7 +316,13 @@ self.addEventListener('install', function oninstall (event) {
 
 self.addEventListener('activate', function onactivate (event) {
   // clear old caches on activate
-  event.waitUntil(clear().then(() => self.clients.claim()))
+  event.waitUntil(clear().then(function () {
+    if (!self.registration.navigationPreload) return self.clients.claim()
+    // enable navigation preload
+    return self.registration.navigationPreload.enable().then(function () {
+      return self.clients.claim()
+    })
+  }))
 })
 
 self.addEventListener('fetch', function onfetch (event) {
@@ -321,14 +330,14 @@ self.addEventListener('fetch', function onfetch (event) {
   event.respondWith(caches.open(CACHE_KEY).then(async function (cache) {
     try {
       var cached = await cache.match(req)
-      var response = self.fetch(event.request)
-      if (req.method.toUpperCase() === 'GET') {
+      var response = await (event.preloadResponse || self.fetch(event.request))
+      if (response.ok && req.method.toUpperCase() === 'GET') {
         await cache.put(req, response.clone())
       }
       return response
     } catch (err) {
       if (cached) return cached
-      throw err
+      return err
     }
   }))
 })
@@ -369,24 +378,32 @@ is compiling the app. The pipline steps are called in series, and have access
 to the assets and dependencies of all prior steps.
 
 ```javascript
-var fs = require('fs')
+var path = require('path')
 var jalla = require('jalla')
+var csv = require('csvtojson')
 var app = jalla('index.js')
 
-// include data.csv as an asset
+// convert and include data.csv as a JSON file
 app.pipeline.get('assets').push(function (state, emit) {
-  return function (cb) {
-    emit('progress', 'data.csv')
-
-    fs.readFile('data.csv', function (err, buffer) {
-      if (err) return cb(err)
-      emit('asset', 'data.json', buffer)
-      cb()
+  return async function (cb) {
+    if (state.assets.has('data.json')) return cb()
+    emit('progress', 'data.json')
+    var json = await csv.fromFile(path.resolve(state.entry, 'data.csv'))
+    emit('asset', 'data.json', Buffer.from(JSON.stringify(json)), {
+      mime: 'application/json
     })
+    cb()
   }
 })
 
-app.listen(8080)
+if (process.env.BUILD) {
+  app.build(path.resolve(__dirname, 'dist'), function (err) {
+    if (err) console.error(err)
+    process.exit(err ? 1 : 0)
+  })
+} else {
+  app.listen(8080)
+}
 ```
 
 ## Configuration

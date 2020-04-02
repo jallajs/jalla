@@ -1,6 +1,7 @@
 var path = require('path')
 var assert = require('assert')
 var serve = require('koa-static')
+var { Minimatch } = require('minimatch')
 var App = require('./lib/app')
 var render = require('./lib/render')
 
@@ -14,11 +15,20 @@ function start (entry, opts = {}) {
   var dist = opts.dist
   if (!dist) dist = typeof opts.serve === 'string' ? opts.serve : 'dist'
 
+  if (opts.skip) {
+    const input = Array.isArray(opts.skip) ? opts.skip : [opts.skip]
+    var skip = input.map(normalizeSkip)
+  }
+
   opts = Object.assign({}, opts, {
     dist: absolute(dist, dir),
     serve: Boolean(opts.serve),
     sw: opts.sw && absolute(opts.sw, dir),
-    css: opts.css && absolute(opts.css, dir)
+    css: opts.css && absolute(opts.css, dir),
+    skip (file) {
+      if (!skip) return false
+      return skip.reduce((res, test) => res || test(file), false)
+    }
   })
 
   var app = new App(entry, opts)
@@ -29,37 +39,34 @@ function start (entry, opts = {}) {
     app.emit('timing', Date.now() - start, ctx)
   })
 
-  if (opts.serve) {
-    let pub = path.resolve(opts.dist, 'public')
-    app.use(serve(pub, { setHeaders }))
-  } else {
-    let state = Object.assign({
-      watch: typeof opts.watch === 'undefined'
-        ? app.env === 'development'
-        : opts.watch
-    }, app.state)
-    let init = new Promise(function (resolve, reject) {
-      app.pipeline.bundle(entry, state, resolve)
-    })
-
-    app.use((ctx, next) => init.then(next))
-    app.use(app.pipeline.middleware())
-    app.use(function (ctx, next) {
-      if (ctx.body) {
-        let cache = state.env !== 'development' && !state.watch
-        let maxAge = cache ? 60 * 60 * 24 * 365 : 0
-        let value = `${cache ? 'public, ' : ''}max-age=${maxAge}`
-        ctx.set('Cache-Control', value)
-      }
-      return next()
-    })
-  }
-
   app.use(require('koa-conditional-get')())
   app.use(require('koa-etag')())
   app.use(render(app))
 
+  if (opts.serve) {
+    app.use(serve(path.resolve(opts.dist, 'public'), { setHeaders }))
+  } else {
+    app.use(app.pipeline.middleware(app.state))
+  }
+
   return app
+}
+
+// ensure skip input is a function
+// any -> fn
+function normalizeSkip (val) {
+  if (val instanceof RegExp) {
+    return val.test.bind(val)
+  } else if (typeof val === 'function') {
+    return val
+  } else if (typeof val === 'string') {
+    var minimatch = new Minimatch(val)
+    return function (str) {
+      return str.includes(val) || minimatch.match(str)
+    }
+  } else {
+    throw new Error('jalla: skip should be either RegExp, function or string')
+  }
 }
 
 // set static asset headers
