@@ -15,6 +15,10 @@ function start (entry, opts = {}) {
   var dist = opts.dist
   if (!dist) dist = typeof opts.serve === 'string' ? opts.serve : 'dist'
 
+  var nocache = [
+    path.resolve(dir, dist, 'public', path.relative(dir, opts.sw))
+  ]
+
   if (opts.skip) {
     const input = Array.isArray(opts.skip) ? opts.skip : [opts.skip]
     var skip = input.map(normalizeSkip)
@@ -50,6 +54,16 @@ function start (entry, opts = {}) {
   }
 
   return app
+
+  // set static asset headers
+  // (obj, str, obj) -> void
+  function setHeaders (res, filepath, stats) {
+    if (nocache.includes(filepath)) {
+      res.setHeader('Cache-Control', 'max-age=0')
+    } else {
+      res.setHeader('Cache-Control', `public, max-age=${60 * 60 * 24 * 365}`)
+    }
+  }
 }
 
 // ensure skip input is a function
@@ -67,12 +81,6 @@ function normalizeSkip (val) {
   } else {
     throw new Error('jalla: skip should be either RegExp, function or string')
   }
-}
-
-// set static asset headers
-// (obj, str, obj) -> void
-function setHeaders (res, path, stats) {
-  res.setHeader('Cache-Control', `public, max-age=${60 * 60 * 24 * 365}`)
 }
 
 // resolve file path (relative to dir) to absolute path
