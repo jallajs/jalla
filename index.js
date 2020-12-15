@@ -15,9 +15,9 @@ function start (entry, opts = {}) {
   var dist = opts.dist
   if (!dist) dist = typeof opts.serve === 'string' ? opts.serve : 'dist'
 
-  var nocache = [
-    path.resolve(dir, dist, 'public', path.relative(dir, opts.sw))
-  ]
+  var swPath = opts.sw
+    ? path.resolve(dir, dist, 'public', path.relative(dir, opts.sw))
+    : null
 
   if (opts.skip) {
     const input = Array.isArray(opts.skip) ? opts.skip : [opts.skip]
@@ -58,7 +58,7 @@ function start (entry, opts = {}) {
   // set static asset headers
   // (obj, str, obj) -> void
   function setHeaders (res, filepath, stats) {
-    if (nocache.includes(filepath)) {
+    if (filepath === swPath) {
       res.setHeader('Cache-Control', 'max-age=0')
     } else {
       res.setHeader('Cache-Control', `public, max-age=${60 * 60 * 24 * 365}`)
